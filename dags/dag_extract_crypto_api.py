@@ -1,7 +1,6 @@
 from datetime import timedelta, datetime
 from airflow import DAG
-from operators.cr_opt import CryptoToMySql
-from operators.op_trends import TrendsToMySql
+from operators import ApiToMySql, TweetToMySql
 from airflow.operators.dummy import DummyOperator
 
 coins = ['bitcoin', 'litecoin', 'ethereum', 'dogecoin']
@@ -42,18 +41,30 @@ with DAG(
         task_id='dummy-1'
     )
 
-    t2 = CryptoToMySql(
+    t2 = ApiToMySql(
         task_id='load_stonks',
         name='crypto_task',
         coins=coins,
+        method='get_price',
         mysql_conn_id='mysql_pinwheel_source',
         tablename='stonks'
     )
-    t3 = TrendsToMySql(
+
+    t3 = ApiToMySql(
         task_id='load_trends',
         name='trends_task',
         mysql_conn_id='mysql_pinwheel_source',
-        tablename='trends'
+        tablename='trends',
+        method='get_search_trending'
     )
 
-    t1 >> [t2, t3]
+    t4 = TweetToMySql(
+        task_id='load_tweets',
+        name='tweets_task',
+        mysql_conn_id='mysql_pinwheel_source',
+        tablename='tweets',
+        search_query='bitcoin',
+        item_count=100
+    )
+
+    t1 >> [t2, t3, t4]

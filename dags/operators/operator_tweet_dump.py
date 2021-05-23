@@ -16,12 +16,14 @@ class TweetToMySql(BaseOperator):
             mysql_conn_id: str = None,
             tablename: str = None,
             search_query: str = None,
+            item_count: int = 20,
             *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.name = name
         self.mysql_conn_id = mysql_conn_id
         self.tablename = tablename
         self.search_query = search_query
+        self.item_count = item_count
 
     def execute(self, context):
 
@@ -34,7 +36,7 @@ class TweetToMySql(BaseOperator):
         # Things to keep
         keeps = ['created_at', 'id', 'text', 'entities', 'lang']
         df = pd.DataFrame()
-        t = tweepy.Cursor(api.search, q=self.search_query).items(20)
+        t = tweepy.Cursor(api.search, q=self.search_query).items(self.item_count)
 
         for tweet in t:
             d = pd.Series({i: getattr(tweet, i) for i in keeps})
