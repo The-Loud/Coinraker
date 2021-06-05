@@ -1,8 +1,7 @@
 from datetime import timedelta, datetime
 from airflow import DAG
-from operators.operator_tweet_dump import TweetToMySql
-from operators.operator_coin_api import ApiToMySql
-from operators.operator_tweet_sentiment import TweetSentiment
+from operators.cr_opt import CryptoToMySql
+from operators.op_trends import TrendsToMySql
 from airflow.operators.dummy import DummyOperator
 
 coins = ['bitcoin', 'litecoin', 'ethereum', 'dogecoin']
@@ -31,11 +30,11 @@ default_args = {
 }
 
 with DAG(
-    'coinraker_load_raw',
+    'crypton_dag_trends',
     default_args=default_args,
     description='Pulls various crypto prices every interval',
     schedule_interval='@hourly',
-    start_date=(datetime(2021, 5, 29)),
+    start_date=(datetime(2021, 5, 15)),
     catchup=False,
     tags=['crypto']
 ) as dag:
@@ -43,38 +42,18 @@ with DAG(
         task_id='dummy-1'
     )
 
-    t2 = ApiToMySql(
+    t2 = CryptoToMySql(
         task_id='load_stonks',
         name='crypto_task',
         coins=coins,
-        method='get_price',
         mysql_conn_id='mysql_pinwheel_source',
         tablename='stonks'
     )
-
-    t3 = ApiToMySql(
+    t3 = TrendsToMySql(
         task_id='load_trends',
         name='trends_task',
         mysql_conn_id='mysql_pinwheel_source',
-        tablename='trends',
-        method='get_search_trending'
+        tablename='trends'
     )
 
-    t4 = TweetToMySql(
-        task_id='load_tweets',
-        name='tweets_task',
-        mysql_conn_id='mysql_pinwheel_source',
-        tablename='tweets',
-        search_query='bitcoin',
-        item_count=1000
-    )
-
-    t5 = TweetSentiment(
-        task_id='calc_sentiment',
-        name='sentiment_task',
-        mysql_conn_id='mysql_pinwheel_source',
-        tablename='sentiment'
-    )
-
-    t1 >> [t2, t3, t4]
-    t4 >> t5
+    t1 >> [t2, t3]
