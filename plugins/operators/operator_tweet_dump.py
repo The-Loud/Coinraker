@@ -7,6 +7,7 @@ import pandas as pd
 import tweepy
 import os
 import string
+from airflow.models import Variable
 
 
 class TweetToMySql(BaseOperator):
@@ -28,8 +29,10 @@ class TweetToMySql(BaseOperator):
 
     def execute(self, context):
 
-        API_KEY = os.getenv('API_KEY')
-        API_SECRET_KEY = os.getenv('API_SECRET_KEY')
+        # API_KEY = os.getenv('API_KEY')
+        # API_SECRET_KEY = os.getenv('API_SECRET_KEY')
+        API_KEY = Variable.get('API_KEY')
+        API_SECRET_KEY = Variable.get('API_SECRET_KEY')
 
         auth = tweepy.AppAuthHandler(API_KEY, API_SECRET_KEY)
         api = tweepy.API(auth)
@@ -49,23 +52,26 @@ class TweetToMySql(BaseOperator):
         # df = pd.json_normalize(json_tweets)
         df['load_date'] = datetime.now()
 
-
         def clean_tweet(tweet):
             try:
-                tweet = ''.join([c for c in tweet if ord(c) < 128])
-                # tweet = ''.join([ord(c) in tweet if ord(c) < 128 else '' for c in tweet])
-                return tweet
+                text = []
+                for c in tweet:
+                    if isinstance(c, int):
+                        text.append(c)
+                    elif ord(c) < 128:
+                        text.append(c)
+                    else:
+                        text.append('')
+                return text
             except:
                 return ''
 
         # Initial preprocessing
-        # df['text'] = df['text'].str.lower()
         df['text'] = df['text'].str.translate(str.maketrans('', '', string.punctuation)).str.lower()
         df['text'] = df['text'].apply(lambda x: x.encode('utf-8').strip())
-        df['text'] = df['text'].apply(clean_tweet)
+        # df['text'] = df['text'].apply(clean_tweet)
         # df['entities'] = df['entities'].apply(lambda x: ''.join([c for c in x if ord(c) < 128]))
         df.drop('entities', inplace=True, axis=1)
-
 
         # Alter this to use get_connection('conn_id') and use that to get a connection.
         hook = MySqlHook(schema='source', mysql_conn_id=self.mysql_conn_id)

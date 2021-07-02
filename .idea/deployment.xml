@@ -1,15 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="PublishConfigData" autoUpload="Always" serverName="smartinez@anchor:22 password" remoteFilesAllowedToDisappearOnAutoupload="false">
+  <component name="PublishConfigData" serverName="smartinez@anchor:22 password" remoteFilesAllowedToDisappearOnAutoupload="false">
     <serverData>
       <paths name="smartinez@anchor:22 password">
         <serverdata>
           <mappings>
-            <mapping deploy="/home/smartinez/Coinraker" local="$PROJECT_DIR$" />
+            <mapping deploy="/plugins/operators" local="$PROJECT_DIR$/plugins/operators" />
+            <mapping deploy="/dags" local="$PROJECT_DIR$/dags" />
+            <mapping deploy="/plugins/sqls" local="$PROJECT_DIR$/sqls" />
           </mappings>
+          <excludedPaths>
+            <excludedPath local="true" path="$PROJECT_DIR$/venv" />
+          </excludedPaths>
         </serverdata>
       </paths>
     </serverData>
-    <option name="myAutoUpload" value="ALWAYS" />
   </component>
 </project>

@@ -4,14 +4,12 @@ from airflow.models.baseoperator import BaseOperator
 from airflow.utils.decorators import apply_defaults
 from transformers import pipeline
 import pandas as pd
-import tweepy
-import os
 
 
 class TweetSentiment(BaseOperator):
     """
     This operator will pull tweets at time t and convert them to a sentiment rating and score.
-    The sentiment rating is then transformed via ordinal encoder and then averaged.
+    The sentiment rating is then transformed via ordinal encoder and then averaged
     """
 
     @apply_defaults
@@ -20,13 +18,11 @@ class TweetSentiment(BaseOperator):
             name: str,
             mysql_conn_id: str = None,
             tablename: str = 'sentiment',
-            search_query: str = None,
             *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.name = name
         self.mysql_conn_id = mysql_conn_id
         self.tablename = tablename
-        self.search_query = search_query
 
     def execute(self, context):
         """
@@ -45,8 +41,14 @@ class TweetSentiment(BaseOperator):
         nlp = pipeline(task='text-classification', model='nlptown/bert-base-multilingual-uncased-sentiment')
 
         # Pull data from the DB for tweets at time t and compute sentiment
-        df = pd.read_sql('./sqls/pull_tweets.sql', engine)
-        df['sentiment'] = df['tweet.text'].apply(lambda x: nlp(x))
+        with open('./sqls/pull_tweets.sql', encoding='utf-8') as q:
+            query = q.read()
+
+        df = pd.read_sql(query, engine)
+        df['sentiment'] = df['text'].apply(lambda x: nlp(x))
+        df['label'] = df['sentiment'].apply(lambda x: x[0]['label'])
+        df['score'] = df['sentiment'].apply(lambda x: x[0]['score'])
+        df.drop('sentiment', inplace=True)
 
         df['load_date'] = datetime.now()
         df.to_sql(self.tablename, engine, if_exists='append', index=False)
