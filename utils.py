@@ -1,9 +1,16 @@
 import numpy as np
+import torch
 from torch import tensor
 import pandas as pd
 
-# Return formatted data
-def split_sequence(sequence, n_steps):
+
+def split_sequence(sequence: np.array, n_steps: int) -> torch.tensor:
+    """
+    Splits up a time series numpy array into tensors of subsequences.
+    :param sequence: the sequence to be split
+    :param n_steps: the number of time steps in each subsequence
+    :return: two tensors
+    """
     X, y = list(), list()
     for i in range(len(sequence)):
         # find the end of this pattern
@@ -27,5 +34,7 @@ data = data['BTC price']
 data = data.to_numpy()
 
 X, y = split_sequence(data, steps)
+
+X, y = torch.from_numpy(X), torch.from_numpy(y)
 
 print(X, y)
