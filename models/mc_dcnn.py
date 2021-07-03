@@ -11,7 +11,7 @@ from utils import split_sequence
 
 '''
 The multi-channel DCNN will take in each time series as a separate channel.
-These channels will be convoled separately with independent filters.
+These channels will be convolved separately with independent filters.
 Once completed, the model will concatenate all the feature maps to a linear layer
 and pass it through some hidden layers for a final regression.
 '''
@@ -34,10 +34,42 @@ def conv_1d(inp: int, oup: int, k_size: tuple[int, ...], stride: tuple[int, ...]
         nn.ReLU(inplace=True),
     )
 
+def linear(inp: int):
+    pass
+
+
+
+class SigNet(nn.Module):
+    def __init__(self):
+        super(SigNet, self).__init__()
+
+        self.block1 = conv_1d(inp=1, oup=8, k_size=(3,), stride=(1,), padding=(1,))  # 1 x 8 x 24
+        self.pool = nn.MaxPool1d(kernel_size=2, ceil_mode=False)  # 1 x 8 x 12
+        self.block2 = conv_1d(8, 16, (6,), (1,), (1,))  # 1 x 16 x 7
+
+    def forward(self, x):
+        x_1 = self.pool(self.block1(x))
+
+        # TODO: Verify if a second pool is necessary
+        x_2 = self.pool(self.block2(x_1))
+
+        # Reshape tensors for the concat
+        x_1 = x_1.reshape(-1, 1, 1)
+        x_2 = x_2.reshape(-1, 1, 1)
+
+        out = torch.cat((x_1, x_2)).reshape(1, 1, -1)  # 160
+        return out
+
 
 class BitNet(nn.Module):
-    def __init__(self):
+    def __init__(self, nets: int = 1):
         super(BitNet, self).__init__()
+
+        # Create a SigNet for each channel
+        series = nn.ModuleList()
+        for i in range(nets):
+            series.append(SigNet())
+
 
         self.block1 = conv_1d(inp=1, oup=8, k_size=(3,), stride=(1,), padding=(1,))  # 1 x 8 x 24
         self.pool = nn.MaxPool1d(kernel_size=2, ceil_mode=False)  # 1 x 8 x 12
