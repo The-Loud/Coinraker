@@ -55,25 +55,25 @@ class SigNet(nn.Module):
         x_2 = self.pool(self.block2(x_1))
 
         # Reshape tensors for the concat
-        x_1 = x_1.reshape(-1, 1, 1)
-        x_2 = x_2.reshape(-1, 1, 1)
+        x_1 = x_1.reshape(1, 1, -1)
+        x_2 = x_2.reshape(1, 1, -1)
 
-        out = torch.cat((x_1, x_2)).reshape(1, 1, -1)  # 160
+        out = torch.cat((x_1, x_2), dim=2)  # 160
         return out
 
 
 class BitNet(nn.Module):
-    def __init__(self, series: List = None):
+    def __init__(self, series: int = 1):
         super(BitNet, self).__init__()
 
         # Create a SigNet for each channel
         self.series = series  # number of time-series channels (features)
         self.convs = nn.ModuleList()
-        for i in range(len(self.series)):
+        for i in range(self.series):
             self.convs.append(SigNet())
 
         # TODO: make a tensor of the appropriate dimensions and concat the outputs
-        some_tensor = torch.tensor([1, 1, 160])
+        some_tensor = torch.empty([1, 1, 160])
 
         # Loop through each feature vector and ConvNet
         # TODO: Should this be in the forward method?
@@ -91,17 +91,18 @@ class BitNet(nn.Module):
         self.lin2 = nn.Linear(500, 50)
         self.lin3 = nn.Linear(50, 1)'''
 
-        self.lin = linear_layer(some_tensor.shape[3])
+        # Need to figure out how to get this value from the output of the CNNs
+        self.lin = linear_layer(some_tensor.shape[2])
 
     def forward(self, x):
 
-        out = torch.tensor([1, 1, 160])
+        out = torch.tensor([1, 1, x.shape[2]])
         # TODO: Should this be in the forward method?
         # Each tensor will have a couple of channels. Each channel should be sent through its own CNN
         # [Batch, channel, subsequence]
         for i in range(x.shape[1]):
             output = self.convs[i](x[:, i, :])
-            torch.cat((out, output))
+            torch.cat((out, output), dim=2)
 
         # Linear stuff
         out = self.lin(out)
