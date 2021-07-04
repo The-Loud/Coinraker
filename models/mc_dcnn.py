@@ -1,10 +1,6 @@
 import torch
 import torch.nn as nn
-import numpy as np
-import pandas as pd
-import time
-from utils import split_sequence
-
+from typing import List
 
 # Build a multi-channel ConvNet
 # Kind of like this paper: http://staff.ustc.edu.cn/~cheneh/paper_pdf/2014/Yi-Zheng-WAIM2014.pdf
@@ -34,9 +30,14 @@ def conv_1d(inp: int, oup: int, k_size: tuple[int, ...], stride: tuple[int, ...]
         nn.ReLU(inplace=True),
     )
 
-def linear(inp: int):
-    pass
 
+def linear_layer(inp: int):
+    return nn.Sequential(
+        nn.Linear(inp, 500),
+        nn.ReLU(inplace=True),
+        nn.Linear(500, 50),
+        nn.Linear(50, 1),
+    )
 
 
 class SigNet(nn.Module):
@@ -62,40 +63,48 @@ class SigNet(nn.Module):
 
 
 class BitNet(nn.Module):
-    def __init__(self, nets: int = 1):
+    def __init__(self, series: List = None):
         super(BitNet, self).__init__()
 
         # Create a SigNet for each channel
-        series = nn.ModuleList()
-        for i in range(nets):
-            series.append(SigNet())
+        self.series = series  # number of time-series channels (features)
+        self.convs = nn.ModuleList()
+        for i in range(len(self.series)):
+            self.convs.append(SigNet())
 
+        # TODO: make a tensor of the appropriate dimensions and concat the outputs
+        some_tensor = torch.tensor([1, 1, 160])
+
+        # Loop through each feature vector and ConvNet
+        # TODO: Should this be in the forward method?
+        '''for s, c in zip(self.series, self.convs):
+            output = c(s)
+            torch.cat((some_tensor, output))
 
         self.block1 = conv_1d(inp=1, oup=8, k_size=(3,), stride=(1,), padding=(1,))  # 1 x 8 x 24
         self.pool = nn.MaxPool1d(kernel_size=2, ceil_mode=False)  # 1 x 8 x 12
         self.block2 = conv_1d(8, 16, (6,), (1,), (1,))  # 1 x 16 x 7 or 9 if ceil_mode = True
 
         # Create linear layers here.
-        self.lin1 = nn.Linear(160, 500)
+        self.lin1 = nn.Linear(some_tensor.shape[3], 500)
         self.relu = nn.ReLU(inplace=True)
         self.lin2 = nn.Linear(500, 50)
-        self.lin3 = nn.Linear(50, 1)
+        self.lin3 = nn.Linear(50, 1)'''
+
+        self.lin = linear_layer(some_tensor.shape[3])
 
     def forward(self, x):
-        x_1 = self.pool(self.block1(x))
-        x_2 = self.pool(self.block2(x_1))
 
-        # Reshape tensors for the concat
-        x_1 = x_1.reshape(-1, 1, 1)
-        x_2 = x_2.reshape(-1, 1, 1)
-
-        out = torch.cat((x_1, x_2)).reshape(1, 1, -1)
+        out = torch.tensor([1, 1, 160])
+        # TODO: Should this be in the forward method?
+        # Each tensor will have a couple of channels. Each channel should be sent through its own CNN
+        # [Batch, channel, subsequence]
+        for i in range(x.shape[1]):
+            output = self.convs[i](x[:, i, :])
+            torch.cat((out, output))
 
         # Linear stuff
-        out = self.relu(self.lin1(out))
-        out = self.relu(self.lin2(out))
+        out = self.lin(out)
 
-        # We want a linear output
-        out = self.lin3(out)
         return out
 
