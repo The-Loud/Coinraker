@@ -8,6 +8,7 @@ import tweepy
 import os
 import string
 from airflow.models import Variable
+import preprocessor as p
 
 
 class TweetToMySql(BaseOperator):
@@ -52,26 +53,18 @@ class TweetToMySql(BaseOperator):
         # df = pd.json_normalize(json_tweets)
         df['load_date'] = datetime.now()
 
-        def clean_tweet(tweet):
-            try:
-                text = []
-                for c in tweet:
-                    if isinstance(c, int):
-                        text.append(c)
-                    elif ord(c) < 128:
-                        text.append(c)
-                    else:
-                        text.append('')
-                return text
-            except:
-                return ''
-
         # Initial preprocessing
-        df['text'] = df['text'].str.translate(str.maketrans('', '', string.punctuation)).str.lower()
+        df['text'] = df['text'].str.translate(str.maketrans('', '', string.punctuation))  #.str.lower()
         df['text'] = df['text'].apply(lambda x: x.encode('utf-8').strip())
         # df['text'] = df['text'].apply(clean_tweet)
         # df['entities'] = df['entities'].apply(lambda x: ''.join([c for c in x if ord(c) < 128]))
         df.drop('entities', inplace=True, axis=1)
+
+        # Clean up basic garbage from the tweets
+        df['cleansed'] = df['text'].apply(p.clean)
+
+        # Get rid of URLs
+
 
         # Alter this to use get_connection('conn_id') and use that to get a connection.
         hook = MySqlHook(schema='source', mysql_conn_id=self.mysql_conn_id)

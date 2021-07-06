@@ -4,6 +4,7 @@ from operators.operator_tweet_dump import TweetToMySql
 from operators.operator_coin_api import ApiToMySql
 from operators.operator_tweet_sentiment import TweetSentiment
 from airflow.operators.dummy import DummyOperator
+from airflow.providers.mysql.operators.mysql import MySqlOperator
 
 coins = ['bitcoin', 'litecoin', 'ethereum', 'dogecoin']
 
@@ -76,5 +77,11 @@ with DAG(
         tablename='sentiment'
     )
 
+    t6 = mysql_task = MySqlOperator(
+        task_id='remove_duplicate_tweets',
+        mysql_conn_id='mysql_pinwheel_source',
+        sql='../sqls/remove_dupes.sql',
+    )
+
     t1 >> [t2, t3, t4]
-    t4 >> t5
+    t4 >> t6 >> t5

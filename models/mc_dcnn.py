@@ -54,6 +54,7 @@ class SigNet(nn.Module):
         # TODO: Verify if a second pool is necessary
         x_2 = self.pool(self.block2(x_1))
 
+        # TODO: Test torch.flatten() here
         # Reshape tensors for the concat
         x_1 = x_1.reshape(1, 1, -1)
         x_2 = x_2.reshape(1, 1, -1)
@@ -101,7 +102,7 @@ class BitNet(nn.Module):
         # Each tensor will have a couple of channels. Each channel should be sent through its own CNN
         # [Batch, channel, subsequence]
         for i in range(x.shape[1]):
-            output = self.convs[i](x[:, i, :])
+            output = self.convs[i](x[:, i, :].unsqueeze(dim=1))
             torch.cat((out, output), dim=2)
 
         # Linear stuff

@@ -45,7 +45,7 @@ class TweetSentiment(BaseOperator):
             query = q.read()
 
         df = pd.read_sql(query, engine)
-        df['sentiment'] = df['text'].apply(lambda x: nlp(x))
+        df['sentiment'] = df['text'].apply(nlp)
         df['label'] = df['sentiment'].apply(lambda x: x[0]['label'])
         df['score'] = df['sentiment'].apply(lambda x: x[0]['score'])
         df.drop('sentiment', inplace=True)

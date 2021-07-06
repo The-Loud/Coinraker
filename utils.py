@@ -23,7 +23,7 @@ def split_sequence(x_seq: np.array, y_seq: np.array, n_steps: int) -> torch.tens
         seq_x, seq_y = x_seq[i:end_ix], y_seq[end_ix]
         X.append(seq_x)
         y.append(seq_y)
-    return np.array(X), np.array(y)
+    return torch.from_numpy(np.array(X)).float(), torch.from_numpy(np.array(y)).float()
 
 
 # 1 day
@@ -35,6 +35,5 @@ X = data['n-transactions']
 
 X, y = X.to_numpy(), y.to_numpy()
 X, y = split_sequence(X, y, steps)
-X, y = torch.from_numpy(X).float(), torch.from_numpy(y).float()
 
 print(X, y)
