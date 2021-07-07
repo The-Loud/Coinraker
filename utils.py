@@ -31,9 +31,12 @@ steps = 24
 
 data = pd.read_csv('data/Bitcoin_dataset_updated 2.csv')
 y = data['BTC price']
-X = data['n-transactions']
+X = data.drop(['Date', 'BTC price'], axis=1)
 
 X, y = X.to_numpy(), y.to_numpy()
 X, y = split_sequence(X, y, steps)
 
-print(X, y)
+# Change the shape to be samples x channels x subsequence
+X = X.permute(0, 2, 1)
+
+# print(X, y)
