@@ -8,15 +8,17 @@ from sklearn.metrics import mean_squared_error
 from matplotlib import pyplot as plt
 
 # Load up the data
-data = pd.read_csv('../data/Bitcoin_dataset_updated 2.csv')
-X = data.drop(['BTC price', 'Date'], axis=1)
-y = np.log(data['BTC price'])
+data = pd.read_csv("../data/Bitcoin_dataset_updated 2.csv")
+X = data.drop(["BTC price", "Date"], axis=1)
+y = np.log(data["BTC price"])
 
 # Split the data
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=69)
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=69
+)
 
 # Preprocess
-si = SimpleImputer(missing_values=np.nan, strategy='mean')
+si = SimpleImputer(missing_values=np.nan, strategy="mean")
 si.fit(X_train)
 
 X_train = si.transform(X_train)
@@ -42,4 +44,5 @@ ax.scatter(X_test[:, 0], y_pred)
 plt.show()
 
 
-'''about 90 is the score to beat.'''
+"""about 90 is the score to beat."""
+print(f"Mean Square Error: {mean_squared_error(y_pred, y_test)}")

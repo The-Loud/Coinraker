@@ -6,16 +6,16 @@ from operators.operator_tweet_sentiment import TweetSentiment
 from airflow.operators.dummy import DummyOperator
 from airflow.providers.mysql.operators.mysql import MySqlOperator
 
-coins = ['bitcoin', 'litecoin', 'ethereum', 'dogecoin']
+coins = ["bitcoin", "litecoin", "ethereum", "dogecoin"]
 
 default_args = {
-    'owner': 'airflow',
-    'depends_on_past': False,
-    'email': ['motorific@gmail.com'],
-    'email_on_failure': False,
-    'email_on_retry': False,
-    'retries': 1,
-    'retry_delay': timedelta(minutes=5),
+    "owner": "airflow",
+    "depends_on_past": False,
+    "email": ["motorific@gmail.com"],
+    "email_on_failure": False,
+    "email_on_retry": False,
+    "retries": 1,
+    "retry_delay": timedelta(minutes=5),
     # 'queue': 'bash_queue',
     # 'pool': 'backfill',
     # 'priority_weight': 10,
@@ -32,55 +32,53 @@ default_args = {
 }
 
 with DAG(
-    'coinraker_load_raw',
+    "coinraker_load_raw",
     default_args=default_args,
-    description='Pulls various crypto prices every interval',
-    schedule_interval='@hourly',
+    description="Pulls various crypto prices every interval",
+    schedule_interval="@hourly",
     start_date=(datetime(2021, 5, 29)),
     catchup=False,
-    tags=['crypto']
+    tags=["crypto"],
 ) as dag:
-    t1 = DummyOperator(
-        task_id='dummy-1'
-    )
+    t1 = DummyOperator(task_id="dummy-1")
 
     t2 = ApiToMySql(
-        task_id='load_stonks',
-        name='crypto_task',
+        task_id="load_stonks",
+        name="crypto_task",
         coins=coins,
-        method='get_price',
-        mysql_conn_id='mysql_pinwheel_source',
-        tablename='stonks'
+        method="get_price",
+        mysql_conn_id="mysql_pinwheel_source",
+        tablename="stonks",
     )
 
     t3 = ApiToMySql(
-        task_id='load_trends',
-        name='trends_task',
-        mysql_conn_id='mysql_pinwheel_source',
-        tablename='trends',
-        method='get_search_trending'
+        task_id="load_trends",
+        name="trends_task",
+        mysql_conn_id="mysql_pinwheel_source",
+        tablename="trends",
+        method="get_search_trending",
     )
 
     t4 = TweetToMySql(
-        task_id='load_tweets',
-        name='tweets_task',
-        mysql_conn_id='mysql_pinwheel_source',
-        tablename='tweets',
-        search_query='bitcoin',
-        item_count=1000
+        task_id="load_tweets",
+        name="tweets_task",
+        mysql_conn_id="mysql_pinwheel_source",
+        tablename="tweets",
+        search_query="bitcoin",
+        item_count=1000,
     )
 
     t5 = TweetSentiment(
-        task_id='calc_sentiment',
-        name='sentiment_task',
-        mysql_conn_id='mysql_pinwheel_source',
-        tablename='sentiment'
+        task_id="calc_sentiment",
+        name="sentiment_task",
+        mysql_conn_id="mysql_pinwheel_source",
+        tablename="sentiment",
     )
 
     t6 = mysql_task = MySqlOperator(
-        task_id='remove_duplicate_tweets',
-        mysql_conn_id='mysql_pinwheel_source',
-        sql='../sqls/remove_dupes.sql',
+        task_id="remove_duplicate_tweets",
+        mysql_conn_id="mysql_pinwheel_source",
+        sql="../sqls/remove_dupes.sql",
     )
 
     t1 >> [t2, t3, t4]

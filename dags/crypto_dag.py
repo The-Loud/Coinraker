@@ -3,16 +3,16 @@ from airflow import DAG
 from operators.cr_opt import CryptoToMySql
 from airflow.operators.dummy import DummyOperator
 
-coins = ['bitcoin', 'litecoin', 'ethereum', 'dogecoin']
+coins = ["bitcoin", "litecoin", "ethereum", "dogecoin"]
 
 default_args = {
-    'owner': 'airflow',
-    'depends_on_past': False,
-    'email': ['motorific@gmail.com'],
-    'email_on_failure': False,
-    'email_on_retry': False,
-    'retries': 1,
-    'retry_delay': timedelta(minutes=5),
+    "owner": "airflow",
+    "depends_on_past": False,
+    "email": ["motorific@gmail.com"],
+    "email_on_failure": False,
+    "email_on_retry": False,
+    "retries": 1,
+    "retry_delay": timedelta(minutes=5),
     # 'queue': 'bash_queue',
     # 'pool': 'backfill',
     # 'priority_weight': 10,
@@ -29,24 +29,22 @@ default_args = {
 }
 
 with DAG(
-    'crypton_dag',
+    "crypton_dag",
     default_args=default_args,
-    description='Pulls various crypto prices every interval',
-    schedule_interval='@hourly',
+    description="Pulls various crypto prices every interval",
+    schedule_interval="@hourly",
     start_date=(datetime(2021, 5, 9)),
     catchup=False,
-    tags=['crypto']
+    tags=["crypto"],
 ) as dag:
-    t1 = DummyOperator(
-        task_id = 'dummy-1'
-    )
+    t1 = DummyOperator(task_id="dummy-1")
 
     t2 = CryptoToMySql(
-        task_id='load_stonks',
-        name='crypto_task',
+        task_id="load_stonks",
+        name="crypto_task",
         coins=coins,
-        mysql_conn_id='mysql_pinwheel_source',
-        tablename='stonks'
+        mysql_conn_id="mysql_pinwheel_source",
+        tablename="stonks",
     )
 
     t1 >> t2

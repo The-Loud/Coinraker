@@ -14,11 +14,13 @@ class TweetSentiment(BaseOperator):
 
     @apply_defaults
     def __init__(
-            self,
-            name: str,
-            mysql_conn_id: str = None,
-            tablename: str = 'sentiment',
-            *args, **kwargs) -> None:
+        self,
+        name: str,
+        mysql_conn_id: str = None,
+        tablename: str = "sentiment",
+        *args,
+        **kwargs,
+    ) -> None:
         super().__init__(*args, **kwargs)
         self.name = name
         self.mysql_conn_id = mysql_conn_id
@@ -34,24 +36,27 @@ class TweetSentiment(BaseOperator):
         """
 
         # Build the connection
-        hook = MySqlHook(schema='source', mysql_conn_id=self.mysql_conn_id)
+        hook = MySqlHook(schema="source", mysql_conn_id=self.mysql_conn_id)
         engine = hook.get_sqlalchemy_engine()
 
         # Create the BERT NLP classifier
-        nlp = pipeline(task='text-classification', model='nlptown/bert-base-multilingual-uncased-sentiment')
+        nlp = pipeline(
+            task="text-classification",
+            model="nlptown/bert-base-multilingual-uncased-sentiment",
+        )
 
         # Pull data from the DB for tweets at time t and compute sentiment
-        with open('./sqls/pull_tweets.sql', encoding='utf-8') as q:
+        with open("./sqls/pull_tweets.sql", encoding="utf-8") as q:
             query = q.read()
 
         df = pd.read_sql(query, engine)
-        df['sentiment'] = df['text'].apply(nlp)
-        df['label'] = df['sentiment'].apply(lambda x: x[0]['label'])
-        df['score'] = df['sentiment'].apply(lambda x: x[0]['score'])
-        df.drop('sentiment', inplace=True)
+        df["sentiment"] = df["text"].apply(nlp)
+        df["label"] = df["sentiment"].apply(lambda x: x[0]["label"])
+        df["score"] = df["sentiment"].apply(lambda x: x[0]["score"])
+        df.drop("sentiment", inplace=True)
 
-        df['load_date'] = datetime.now()
-        df.to_sql(self.tablename, engine, if_exists='append', index=False)
+        df["load_date"] = datetime.now()
+        df.to_sql(self.tablename, engine, if_exists="append", index=False)
 
         message = f" Saving data to {self.tablename}"
         print(message)
