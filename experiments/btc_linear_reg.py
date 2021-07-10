@@ -1,11 +1,15 @@
-import pandas as pd
+"""
+This module runs a basic linear regression on log-transformed and normalized data.
+It serves as a baseline to see if the accuracy of the MC DCNN is better.
+"""
 import numpy as np
-from sklearn.linear_model import LinearRegression
-from sklearn.model_selection import train_test_split
-from sklearn.impute import SimpleImputer
-from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import mean_squared_error
+import pandas as pd
 from matplotlib import pyplot as plt
+from sklearn.impute import SimpleImputer
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
 
 # Load up the data
 data = pd.read_csv("../data/Bitcoin_dataset_updated 2.csv")
@@ -44,5 +48,5 @@ ax.scatter(X_test[:, 0], y_pred)
 plt.show()
 
 
-"""about 90 is the score to beat."""
+# about 90 is the score to beat.
 print(f"Mean Square Error: {mean_squared_error(y_pred, y_test)}")

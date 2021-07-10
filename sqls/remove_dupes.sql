@@ -1,4 +1,3 @@
-
 # Keep the original tweet only
 DELETE t1 FROM source.tweets t1
 INNER JOIN source.tweets t2

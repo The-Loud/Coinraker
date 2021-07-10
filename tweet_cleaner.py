@@ -1,15 +1,20 @@
-import preprocessor as p
-import pandas as pd
-from sqlalchemy import create_engine
+"""
+Preliminary attempt at cleaning tweets
+May not need this file
+"""
 import os
+
+import pandas as pd
+import preprocessor as p
+from sqlalchemy import create_engine
 
 conn_str = os.environ.get("src_conn_id")
 
 e = create_engine(conn_str)
 
-file = "../sqls/pull_tweets.sql"
+FILE = "../sqls/pull_tweets.sql"
 
-with open(file, "r") as f:
+with open(FILE, "r") as f:
     query = f.read()
 
 data = pd.read_sql(query, e)

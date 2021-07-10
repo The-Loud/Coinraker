@@ -1,9 +1,13 @@
-from airflow.providers.mysql.hooks.mysql import MySqlHook
+"""
+Operator for loading tweet sentiment.
+Uses NLP to calculate the sentiment then saves it to a table.
+"""
 from datetime import datetime
-from airflow.models.baseoperator import BaseOperator
-from airflow.utils.decorators import apply_defaults
-from transformers import pipeline
+
 import pandas as pd
+from airflow.models.baseoperator import BaseOperator
+from airflow.providers.mysql.hooks.mysql import MySqlHook
+from transformers import pipeline
 
 
 class TweetSentiment(BaseOperator):
@@ -12,19 +16,18 @@ class TweetSentiment(BaseOperator):
     The sentiment rating is then transformed via ordinal encoder and then averaged
     """
 
-    @apply_defaults
     def __init__(
         self,
-        name: str,
-        mysql_conn_id: str = None,
-        tablename: str = "sentiment",
         *args,
+        name: str = None,
+        mysql_conn_id: str = None,
+        table_name: str = "sentiment",
         **kwargs,
     ) -> None:
         super().__init__(*args, **kwargs)
         self.name = name
         self.mysql_conn_id = mysql_conn_id
-        self.tablename = tablename
+        self.table_name = table_name
 
     def execute(self, context):
         """
@@ -46,18 +49,18 @@ class TweetSentiment(BaseOperator):
         )
 
         # Pull data from the DB for tweets at time t and compute sentiment
-        with open("./sqls/pull_tweets.sql", encoding="utf-8") as q:
-            query = q.read()
+        with open("./sqls/pull_tweets.sql", encoding="utf-8") as file:
+            query = file.read()
 
-        df = pd.read_sql(query, engine)
-        df["sentiment"] = df["text"].apply(nlp)
-        df["label"] = df["sentiment"].apply(lambda x: x[0]["label"])
-        df["score"] = df["sentiment"].apply(lambda x: x[0]["score"])
-        df.drop("sentiment", inplace=True)
+        data = pd.read_sql(query, engine)
+        data["sentiment"] = data["text"].apply(nlp)
+        data["label"] = data["sentiment"].apply(lambda x: x[0]["label"])
+        data["score"] = data["sentiment"].apply(lambda x: x[0]["score"])
+        data.drop("sentiment", inplace=True)
 
-        df["load_date"] = datetime.now()
-        df.to_sql(self.tablename, engine, if_exists="append", index=False)
+        data["load_date"] = datetime.now()
+        data.to_sql(self.table_name, engine, if_exists="append", index=False)
 
-        message = f" Saving data to {self.tablename}"
+        message = f" Saving data to {self.table_name}"
         print(message)
         return message

@@ -1,17 +1,21 @@
-from transformers import pipeline
+"""
+Test module for the NLP tool
+"""
+import os
+
 import pandas as pd
 from sqlalchemy import create_engine
-import os
+from transformers import pipeline
 
 conn_str = os.environ.get("str_conn_id")
 
 e = create_engine(conn_str)
 
-query = "select * from tweets limit 250"
+QUERY = "select * from tweets limit 250"
 
-data = pd.read_sql(query, e)
+data = pd.read_sql(QUERY, e)
 
-# tweet = 'RT @AJA_Cortes: $BTC dropped to $3k last year and everyone was fawking crying and having meltdowns'
+# tweet = 'dropped to $3k last year and everyone was fawking crying and having meltdowns'
 
 nlp = pipeline(
     task="text-classification", model="nlptown/bert-base-multilingual-uncased-sentiment"

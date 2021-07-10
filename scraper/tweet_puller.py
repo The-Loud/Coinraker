@@ -1,6 +1,11 @@
-import tweepy
+"""
+Grabs tweets and keeps only the selected fields
+Sentiment is then calculated and stored in two fields
+"""
 import os
+
 import pandas as pd
+import tweepy
 from transformers import pipeline
 
 
@@ -21,17 +26,12 @@ for tweet in t:
         # This seems inefficient but for 20 rows, who cares
         df = pd.concat([df, d.to_frame().T], ignore_index=True)
 
-"""df = pd.DataFrame()
-for tweet in tweepy.Cursor(api.search, q='$BTC').items(1000):
-    s = pd.Series(tweet.text)
-    df = df.append(s, ignore_index=True)"""
-
 nlp = pipeline(
     task="text-classification", model="nlptown/bert-base-multilingual-uncased-sentiment"
 )
 
 df["text"] = df["text"].apply(lambda x: "".join([c for c in x if ord(c) < 128]))
-df["sentiment"] = df["text"].apply(lambda x: nlp(x))
+df["sentiment"] = df["text"].apply(nlp)
 df["label"] = df["sentiment"].apply(lambda x: x[0]["label"])
 df["score"] = df["sentiment"].apply(lambda x: x[0]["score"])
 

@@ -1,10 +1,18 @@
-from datetime import timedelta, datetime
+"""
+Crypto loading dag.
+Runs each operator per the bitshift operators at the bottom.
+Self-explanatory.
+"""
+from datetime import datetime
+from datetime import timedelta
+
 from airflow import DAG
-from operators.operator_tweet_dump import TweetToMySql
-from operators.operator_coin_api import ApiToMySql
-from operators.operator_tweet_sentiment import TweetSentiment
 from airflow.operators.dummy import DummyOperator
 from airflow.providers.mysql.operators.mysql import MySqlOperator
+
+from operators.operator_coin_api import ApiToMySql
+from operators.operator_tweet_dump import TweetToMySql
+from operators.operator_tweet_sentiment import TweetSentiment
 
 coins = ["bitcoin", "litecoin", "ethereum", "dogecoin"]
 
