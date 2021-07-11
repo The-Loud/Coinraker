@@ -8,6 +8,7 @@ from datetime import timedelta
 
 from airflow import DAG
 from airflow.operators.dummy import DummyOperator
+from airflow.providers.mysql.operators.mysql import MySqlOperator
 
 from operators.operator_coin_api import ApiToMySql
 from operators.operator_tweet_dump import TweetToMySql
@@ -73,7 +74,7 @@ with DAG(
         mysql_conn_id="mysql_pinwheel_source",
         table_name="tweets",
         search_query="bitcoin",
-        item_count=1000,
+        item_count=500,
     )
 
     t5 = TweetSentiment(
@@ -81,7 +82,7 @@ with DAG(
         name="sentiment_task",
         mysql_conn_id="mysql_pinwheel_source",
         table_name="sentiment",
-        script="pull_tweets.sql",
+        script="/opt/airflow/include/sqls/pull_tweets.sql",
     )
 
     """t6 = mysql_task = MySqlOperator(
@@ -90,5 +91,17 @@ with DAG(
         sql="../sqls/remove_dupes.sql",
     )"""
 
+    t7 = MySqlOperator(
+        task_id="load_base",
+        mysql_conn_id="mysql_pinwheel_source",
+        sql="/opt/airflow/include/sqls/load_base_tbl.sql",
+    )
+
+    t8 = DummyOperator(task_id="btc_prediction")
+
+    t9 = DummyOperator(task_id="extract_data")
+
     t1 >> [t2, t3, t4]
     t4 >> t5
+    [t2, t3, t5] >> t7
+    t7 >> t8 >> t9

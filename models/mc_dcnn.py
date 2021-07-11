@@ -14,7 +14,7 @@ def conv_1d(
     oup: int,
     k_size: tuple[int, ...],
     stride: tuple[int, ...],
-    padding,
+    padding: tuple[int, ...],
 ) -> nn.Sequential:
     """
     Creates a standard convolutional block with batchnorm and activation.
