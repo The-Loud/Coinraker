@@ -2,8 +2,6 @@
 Operator for loading tweet sentiment.
 Uses NLP to calculate the sentiment then saves it to a table.
 """
-from datetime import datetime
-
 import pandas as pd
 from airflow.models.baseoperator import BaseOperator
 from airflow.providers.mysql.hooks.mysql import MySqlHook
@@ -22,12 +20,14 @@ class TweetSentiment(BaseOperator):
         name: str = None,
         mysql_conn_id: str = None,
         table_name: str = "sentiment",
+        script: str = None,
         **kwargs,
     ) -> None:
         super().__init__(*args, **kwargs)
         self.name = name
         self.mysql_conn_id = mysql_conn_id
         self.table_name = table_name
+        self.script = script
 
     def execute(self, context):
         """
@@ -49,16 +49,15 @@ class TweetSentiment(BaseOperator):
         )
 
         # Pull data from the DB for tweets at time t and compute sentiment
-        with open("./sqls/pull_tweets.sql", encoding="utf-8") as file:
+        with open(self.script, encoding="utf-8") as file:
             query = file.read()
 
         data = pd.read_sql(query, engine)
-        data["sentiment"] = data["text"].apply(nlp)
+        data["sentiment"] = data["cleansed"].apply(nlp)
         data["label"] = data["sentiment"].apply(lambda x: x[0]["label"])
         data["score"] = data["sentiment"].apply(lambda x: x[0]["score"])
         data.drop("sentiment", inplace=True)
 
-        data["load_date"] = datetime.now()
         data.to_sql(self.table_name, engine, if_exists="append", index=False)
 
         message = f" Saving data to {self.table_name}"

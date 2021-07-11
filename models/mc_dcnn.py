@@ -78,9 +78,10 @@ class SigNet(nn.Module):
         x_1 = self.pool(self.block1(x_inp))
 
         # TODO: Verify if a second pool is necessary
-        x_2 = self.pool(self.block2(x_1))
+        # x_2 = self.pool(self.block2(x_1))  # 1 x 16 x 4
+        x_2 = self.block2(x_1)  # 1 x 16 x 9
+        # print(x_2.shape)
 
-        # TODO: Test torch.flatten() here
         # Reshape tensors for the concat
         x_1 = x_1.reshape(1, 1, -1)
         x_2 = x_2.reshape(1, 1, -1)
@@ -114,30 +115,25 @@ class BitNet(nn.Module):
             self.convs.append(SigNet())
 
         # TODO: make a tensor of the appropriate dimensions and concat the outputs
-        some_tensor = torch.empty([1, 1, 1120])  # 160
+        some_tensor = torch.empty([1, 1, 1680])  # 1120 if second pool
 
         # Need to figure out how to get this value from the output of the CNNs
         self.lin = linear_layer(some_tensor.shape[2])
 
     def forward(self, x_data):
         """
-        Pass the data through the model
+        Each tensor will have a couple of channels.
+        Each channel should be sent through its own CNN
+        [Batch, channel, subsequence]
         :param x_data: input tensor
         :return: vector ready for linear layer
         """
 
-        # TODO: Find a way to just cat the tensors rather than having to define a new one
-        # out = torch.empty(1, 1, x.shape[2])
-
         tensor_list = []
-        # Each tensor will have a couple of channels.
-        # Each channel should be sent through its own CNN
-        # [Batch, channel, subsequence]
         for i in range(x_data.shape[1]):
             output = self.convs[i](x_data[:, i, :].unsqueeze(dim=1))
             tensor_list.append(output)
 
-            # out = torch.cat((out, output), dim=2)
         out = torch.cat(tensor_list, dim=2)
 
         # Linear stuff

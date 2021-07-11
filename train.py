@@ -11,6 +11,7 @@ from torch import nn
 from models.mc_dcnn import BitNet
 from utils import split_sequence
 
+PATH = "./runs/"
 # Import dataset
 data = pd.read_csv("data/Bitcoin_dataset_updated 2.csv")
 se = SimpleImputer(strategy="mean", missing_values=np.nan)
@@ -35,7 +36,6 @@ X = X.permute(0, 2, 1)
 model = BitNet(X.shape[1])  # .apply(init_weights)
 optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
 criterion = nn.MSELoss()
-pytorch_total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
 
 # Train model with model.train()
 for epoch in range(15):
@@ -59,8 +59,6 @@ for epoch in range(15):
         "epoch: ", epoch, " loss: ", RUNNING_LOSS / len(X)
     )  # print out loss for each epoch
 
-# out = model(X)
-# print(out)
-
+torch.save(model.state_dict(), PATH)
 
 # Test model with model.eval()

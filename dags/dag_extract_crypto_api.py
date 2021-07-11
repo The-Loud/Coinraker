@@ -8,7 +8,6 @@ from datetime import timedelta
 
 from airflow import DAG
 from airflow.operators.dummy import DummyOperator
-from airflow.providers.mysql.operators.mysql import MySqlOperator
 
 from operators.operator_coin_api import ApiToMySql
 from operators.operator_tweet_dump import TweetToMySql
@@ -40,13 +39,14 @@ default_args = {
 }
 
 with DAG(
-    "coinraker_load_raw",
+    "dag_coin_full_send",
     default_args=default_args,
     description="Pulls various crypto prices every interval",
     schedule_interval="@hourly",
     start_date=(datetime(2021, 5, 29)),
     catchup=False,
     tags=["crypto"],
+    template_searchpath="opt/airflow/include/sqls",
 ) as dag:
     t1 = DummyOperator(task_id="dummy-1")
 
@@ -56,14 +56,14 @@ with DAG(
         coins=coins,
         method="get_price",
         mysql_conn_id="mysql_pinwheel_source",
-        tablename="stonks",
+        table_name="stonks",
     )
 
     t3 = ApiToMySql(
         task_id="load_trends",
         name="trends_task",
         mysql_conn_id="mysql_pinwheel_source",
-        tablename="trends",
+        table_name="trends",
         method="get_search_trending",
     )
 
@@ -71,7 +71,7 @@ with DAG(
         task_id="load_tweets",
         name="tweets_task",
         mysql_conn_id="mysql_pinwheel_source",
-        tablename="tweets",
+        table_name="tweets",
         search_query="bitcoin",
         item_count=1000,
     )
@@ -80,14 +80,15 @@ with DAG(
         task_id="calc_sentiment",
         name="sentiment_task",
         mysql_conn_id="mysql_pinwheel_source",
-        tablename="sentiment",
+        table_name="sentiment",
+        script="pull_tweets.sql",
     )
 
-    t6 = mysql_task = MySqlOperator(
+    """t6 = mysql_task = MySqlOperator(
         task_id="remove_duplicate_tweets",
         mysql_conn_id="mysql_pinwheel_source",
         sql="../sqls/remove_dupes.sql",
-    )
+    )"""
 
     t1 >> [t2, t3, t4]
-    t4 >> t6 >> t5
+    t4 >> t5
