@@ -14,7 +14,7 @@ def conv_1d(
     oup: int,
     k_size: tuple[int, ...],
     stride: tuple[int, ...],
-    padding: tuple[int, ...],
+    padding,
 ) -> nn.Sequential:
     """
     Creates a standard convolutional block with batchnorm and activation.
@@ -63,11 +63,9 @@ class SigNet(nn.Module):
     def __init__(self):
         super().__init__()
 
-        self.block1 = conv_1d(
-            inp=1, oup=8, k_size=(3,), stride=(1,), padding=(1,)
-        )  # 1 x 8 x 24
+        self.block1 = conv_1d(inp=1, oup=8, k_size=(3,), stride=(1,), padding=(1,))
         self.pool = nn.MaxPool1d(kernel_size=2, ceil_mode=False)  # 1 x 8 x 12
-        self.block2 = conv_1d(8, 16, (6,), (1,), (1,))  # 1 x 16 x 7
+        self.block2 = conv_1d(8, 16, (5,), (1,), (1,))  # 1 x 16 x 7
 
     def forward(self, x_inp):
         """
@@ -77,9 +75,9 @@ class SigNet(nn.Module):
         """
         x_1 = self.pool(self.block1(x_inp))
 
-        # TODO: Verify if a second pool is necessary
-        # x_2 = self.pool(self.block2(x_1))  # 1 x 16 x 4
-        x_2 = self.block2(x_1)  # 1 x 16 x 9
+        # x_2 = self.pool(self.block2(x_1))  # 1 x 8 x 24
+        # No need for second pool
+        x_2 = self.block2(x_1)  # 1 x 8 x 12
         # print(x_2.shape)
 
         # Reshape tensors for the concat
@@ -114,11 +112,10 @@ class BitNet(nn.Module):
         for _ in range(self.series):
             self.convs.append(SigNet())
 
-        # TODO: make a tensor of the appropriate dimensions and concat the outputs
-        some_tensor = torch.empty([1, 1, 1680])  # 1120 if second pool
+        h_layer = 1536
 
         # Need to figure out how to get this value from the output of the CNNs
-        self.lin = linear_layer(some_tensor.shape[2])
+        self.lin = linear_layer(h_layer)
 
     def forward(self, x_data):
         """

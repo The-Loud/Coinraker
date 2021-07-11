@@ -34,12 +34,15 @@ def split_sequence(x_seq: np.array, y_seq: np.array, n_steps: int) -> torch.tens
 
 
 # 1 day
-STEPS = 24
+STEPS = 6
 
-data = pd.read_csv("data/Bitcoin_dataset_updated 2.csv")
-y = data["BTC price"]
-X = data.drop(["Date", "BTC price"], axis=1)
+data = pd.read_csv(
+    "data/btc_grp_202107111108.csv", index_col="load_date", parse_dates=True
+)
+y = data["usd"]
+X = data.drop(["usd", "crypto", "id"], axis=1)
 
+# X = data.drop(["Date", "BTC price"], axis=1)
 X, y = X.to_numpy(), y.to_numpy()
 X, y = split_sequence(X, y, STEPS)
 

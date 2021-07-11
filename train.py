@@ -13,13 +13,13 @@ from utils import split_sequence
 
 PATH = "./runs/"
 # Import dataset
-data = pd.read_csv("data/Bitcoin_dataset_updated 2.csv")
+data = pd.read_csv("data/btc_grp_202107111108.csv")
 se = SimpleImputer(strategy="mean", missing_values=np.nan)
 ss = StandardScaler()
 # Loop through dataset and format into subsequences
 STEPS = 24  # 1 day
-y = data["BTC price"]
-X = data.drop(["Date", "BTC price"], axis=1)
+y = data["usd"]
+X = data.drop(["load_date", "crypto", "id"], axis=1)
 
 X = se.fit_transform(X)
 X = ss.fit_transform(X)
@@ -38,7 +38,7 @@ optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
 criterion = nn.MSELoss()
 
 # Train model with model.train()
-for epoch in range(15):
+for epoch in range(130):
     RUNNING_LOSS = 0.0
     for i, value in enumerate(X):
         inputs = value.unsqueeze(0)
@@ -59,6 +59,6 @@ for epoch in range(15):
         "epoch: ", epoch, " loss: ", RUNNING_LOSS / len(X)
     )  # print out loss for each epoch
 
-torch.save(model.state_dict(), PATH)
+torch.save(model.state_dict(), PATH + "test.pt")
 
 # Test model with model.eval()
