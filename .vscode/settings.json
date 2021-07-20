@@ -13,5 +13,7 @@
             "username": "pinwheel",
             "password": "HbG;O*A)_|1:"
         }
-    ]
+    ],
+    "python.linting.pylintEnabled": true,
+    "python.linting.enabled": true
 }
