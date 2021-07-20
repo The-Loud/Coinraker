@@ -8,6 +8,8 @@ __pycache__/
 
 # Test files not needed
 experiments/
+*.csv
+data/
 
 # Distribution / packaging
 .Python

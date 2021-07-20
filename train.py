@@ -13,7 +13,7 @@ from utils import split_sequence
 
 PATH = "./runs/"
 # Import dataset
-data = pd.read_csv("data/btc_grp_202107111108.csv")
+data = pd.read_csv("data/base_data.csv")
 se = SimpleImputer(strategy="mean", missing_values=np.nan)
 ss = StandardScaler()
 # Loop through dataset and format into subsequences
@@ -38,7 +38,8 @@ optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
 criterion = nn.MSELoss()
 
 # Train model with model.train()
-for epoch in range(130):
+model.train()
+for epoch in range(250):
     RUNNING_LOSS = 0.0
     for i, value in enumerate(X):
         inputs = value.unsqueeze(0)
@@ -59,6 +60,6 @@ for epoch in range(130):
         "epoch: ", epoch, " loss: ", RUNNING_LOSS / len(X)
     )  # print out loss for each epoch
 
-torch.save(model.state_dict(), PATH + "test.pt")
+torch.save(model.state_dict(), PATH + "base.pt")
 
 # Test model with model.eval()

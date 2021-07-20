@@ -112,7 +112,7 @@ class BitNet(nn.Module):
         for _ in range(self.series):
             self.convs.append(SigNet())
 
-        h_layer = 1536
+        h_layer = 1792
 
         # Need to figure out how to get this value from the output of the CNNs
         self.lin = linear_layer(h_layer)
