@@ -73,7 +73,7 @@ class TweetToMySql(BaseOperator):
         hook = MySqlHook(schema="source", mysql_conn_id=self.mysql_conn_id)
         engine = hook.get_sqlalchemy_engine()
 
-        data.to_sql(self.table_name, engine, if_exists="append", index=False)
+        data.to_sql(self.table_name, engine, if_exists="replace", index=False)
 
         message = f" Saving data to {self.table_name}"
         return message

@@ -47,7 +47,7 @@ with DAG(
     start_date=(datetime(2021, 5, 29)),
     catchup=False,
     tags=["crypto"],
-    template_searchpath="opt/airflow/include/sqls",
+    template_searchpath="/opt/airflow/include/sqls",
 ) as dag:
     t1 = DummyOperator(task_id="dummy-1")
 
@@ -82,7 +82,7 @@ with DAG(
         name="sentiment_task",
         mysql_conn_id="mysql_pinwheel_source",
         table_name="sentiment",
-        script="/opt/airflow/include/sqls/pull_tweets.sql",
+        script="pull_tweets.sql",
     )
 
     """t6 = mysql_task = MySqlOperator(
@@ -94,7 +94,7 @@ with DAG(
     t7 = MySqlOperator(
         task_id="load_base",
         mysql_conn_id="mysql_pinwheel_source",
-        sql="/opt/airflow/include/sqls/load_base_tbl.sql",
+        sql="load_base_tbl.sql",
     )
 
     t8 = DummyOperator(task_id="btc_prediction")

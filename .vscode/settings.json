@@ -1,0 +1,17 @@
+{
+    "sqltools.connections": [
+        {
+            "mysqlOptions": {
+                "authProtocol": "xprotocol"
+            },
+            "previewLimit": 50,
+            "server": "anchor",
+            "port": 3306,
+            "driver": "MySQL",
+            "name": "anchor",
+            "database": "airflow",
+            "username": "pinwheel",
+            "password": "HbG;O*A)_|1:"
+        }
+    ]
+}
