@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import torch
 from sklearn.impute import SimpleImputer
+from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from torch import nn
 
@@ -31,6 +32,9 @@ X = X.permute(0, 2, 1)
 
 # test = X[0].reshape(1, 1, -1)
 # Split into train/test
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=420
+)
 
 # Build model. Pass in the number of channels to build the proper Conv layers.
 model = BitNet(X.shape[1])  # .apply(init_weights)
@@ -62,4 +66,6 @@ for epoch in range(250):
 
 torch.save(model.state_dict(), PATH + "base.pt")
 
-# Test model with model.eval()
+# Test model
+with torch.no_grad():
+    pass

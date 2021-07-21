@@ -7,8 +7,7 @@ insert into source.base_data with cte as (SELECT s.crypto,
                                                  s2.load_date,
                                                  avg(s2.score),
                                                  row_number() OVER (PARTITION BY s.id
-                                                                    ORDER BY s.id) row_num,
-                                                 null
+                                                                    ORDER BY s.id) row_num
                                           FROM   stonks s
                                               INNER JOIN sentiment s2
                                                   ON date_format(s.load_date, '%Y-%m-%d %H:00:00') = date_format(s2.load_date, '%Y-%m-%d %H:00:00')
@@ -24,5 +23,5 @@ SELECT cte.*,
        scores.avg_rating
 FROM   cte
     INNER JOIN scores
-        ON date_format(cte.load_date, '%Y-%m-%d %H:00:00') = date_format(scores.load_date, '%Y-%m-%d %H:00:00')
+        ON date_format(cte.load_date, '%Y-%m-%d %H:00:00') = date_format(scores.load_dt, '%Y-%m-%d %H:00:00')
 WHERE  row_num = 1 limit 1;
