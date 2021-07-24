@@ -14,7 +14,7 @@ from utils import split_sequence
 
 PATH = "./runs/"
 # Import dataset
-data = pd.read_csv("data/base_data.csv")
+data = pd.read_csv("data/training.csv")
 se = SimpleImputer(strategy="mean", missing_values=np.nan)
 ss = StandardScaler()
 # Loop through dataset and format into subsequences
