@@ -41,10 +41,12 @@ def linear_layer(inp: int) -> nn.Sequential:
     :return: nn.Sequential completed block
     """
     return nn.Sequential(
-        nn.Linear(inp, 1500),
+        nn.Linear(inp, 50),
         nn.ReLU(inplace=True),
-        nn.Linear(1500, 50),
-        nn.ReLU(inplace=True),
+        nn.Dropout(),
+        # nn.Linear(250, 50),
+        # nn.ReLU(inplace=True),
+        # nn.Dropout(),
         nn.Linear(50, 1),
     )
 

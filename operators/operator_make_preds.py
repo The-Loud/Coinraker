@@ -54,29 +54,30 @@ class PredictPrice(BaseOperator):
         # TODO: Use a window function on this query
 
         # Create methods to handle the missing data points.
+        # steps = 24  # 1 day
+        inp = data.drop(["load_date"], axis=1)
+
+        # Create methods to handle the missing data points.
         imputer = SimpleImputer(strategy="mean", missing_values=np.nan)
         scaler = StandardScaler()
-
-        # steps = 24  # 1 day
-        inp = data.drop(["load_date", "crypto", "id"], axis=1)
 
         inp = imputer.fit_transform(inp)
         inp = scaler.fit_transform(inp)
 
-        inp = inp.permute(0, 2, 1)
-
-        # TODO: Verify if the split_sequence is needed
-        # Probably not if we only get 24 time steps back.
+        inp = torch.from_numpy(inp).float()
+        inp = inp.unsqueeze(0).permute(0, 2, 1)
 
         model = BitNet(inp.shape[1])
-        model.load_state_dict(torch.load("../runs/base.pt"))
+        model.load_state_dict(torch.load("./runs/base_3.pt"))
 
         # We don't need to track gradients for predictions.
         model.eval()
 
-        data["predicted_price"] = model(inp)
+        output = model(inp)
+
+        print(f"Prediction: {output.item()}\nActual: {data.loc[23, 'usd']}")
 
         data.to_sql(self.table_name, engine, if_exists="append", index=False)
 
-        message = f" Saving data to {self.table_name}"
+        message = f"Prediction: {output.item()}\nActual: {data.loc[23, 'usd']}"
         return message

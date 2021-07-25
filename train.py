@@ -36,14 +36,23 @@ X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=420
 )
 
+
+def init_weights(mod):
+    """Initialize weights using xavier"""
+    if isinstance(mod) == nn.Linear:
+        torch.nn.init.xavier_uniform(mod.weight)
+        mod.bias.data.fill_(0.01)
+
+
 # Build model. Pass in the number of channels to build the proper Conv layers.
 model = BitNet(X.shape[1])  # .apply(init_weights)
+model.apply(init_weights)
 optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
 criterion = nn.MSELoss()
 
 # Train model with model.train()
 model.train()
-for epoch in range(350):
+for epoch in range(30):
     RUNNING_LOSS = 0.0
     for i, value in enumerate(X):
         inputs = value.unsqueeze(0)
@@ -61,10 +70,10 @@ for epoch in range(350):
     print(abs_deltas)
 
     print(
-        "epoch: ", epoch, " loss: ", RUNNING_LOSS / len(X)
+        "epoch: ", epoch, " loss: ", np.sqrt(RUNNING_LOSS / len(X))
     )  # print out loss for each epoch
 
-torch.save(model.state_dict(), PATH + "base_2.pt")
+torch.save(model.state_dict(), PATH + "base_3.pt")
 
 # Test model
 with torch.no_grad():
