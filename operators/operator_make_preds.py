@@ -15,14 +15,14 @@ from models.mc_dcnn import BitNet
 
 class PredictPrice(BaseOperator):
     """
-    The price prediction operator. This loads the model and calculates t using n-23 (24) steps.
+    The price prediction operator. This loads the model and calculates t+1 using n-23 (24) steps.
     """
 
     def __init__(
         self,
         *args,
         name: str = None,
-        mysql_conn_id: str = "src_conn_id",
+        mysql_conn_id: str = "mysql_pinwheel_source",
         table_name: str = "predictions",
         script: str = None,
         **kwargs,
@@ -65,7 +65,7 @@ class PredictPrice(BaseOperator):
 
         inp = inp.permute(0, 2, 1)
 
-        # TODO: Verify if the split_sequence is needed.
+        # TODO: Verify if the split_sequence is needed
         # Probably not if we only get 24 time steps back.
 
         model = BitNet(inp.shape[1])
@@ -79,5 +79,4 @@ class PredictPrice(BaseOperator):
         data.to_sql(self.table_name, engine, if_exists="append", index=False)
 
         message = f" Saving data to {self.table_name}"
-        print(message)
         return message

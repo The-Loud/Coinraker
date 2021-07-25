@@ -20,7 +20,7 @@ ss = StandardScaler()
 # Loop through dataset and format into subsequences
 STEPS = 24  # 1 day
 y = data["usd"]
-X = data.drop(["load_date", "crypto", "id"], axis=1)
+X = data.drop(["load_date", "crypto", "id", "AVG(s2.score)", "row_num"], axis=1)
 
 X = se.fit_transform(X)
 X = ss.fit_transform(X)
@@ -43,7 +43,7 @@ criterion = nn.MSELoss()
 
 # Train model with model.train()
 model.train()
-for epoch in range(250):
+for epoch in range(350):
     RUNNING_LOSS = 0.0
     for i, value in enumerate(X):
         inputs = value.unsqueeze(0)
@@ -64,7 +64,7 @@ for epoch in range(250):
         "epoch: ", epoch, " loss: ", RUNNING_LOSS / len(X)
     )  # print out loss for each epoch
 
-torch.save(model.state_dict(), PATH + "base.pt")
+torch.save(model.state_dict(), PATH + "base_2.pt")
 
 # Test model
 with torch.no_grad():
