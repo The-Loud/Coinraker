@@ -40,15 +40,7 @@ def linear_layer(inp: int) -> nn.Sequential:
     :param inp: Size of the starting input layer. This is derived from the third dimension.
     :return: nn.Sequential completed block
     """
-    return nn.Sequential(
-        nn.Linear(inp, 50),
-        nn.ReLU(inplace=True),
-        nn.Dropout(),
-        # nn.Linear(250, 50),
-        # nn.ReLU(inplace=True),
-        # nn.Dropout(),
-        nn.Linear(50, 1),
-    )
+    return nn.Sequential(nn.Linear(inp, 1))
 
 
 class SigNet(nn.Module):

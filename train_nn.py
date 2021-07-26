@@ -5,12 +5,10 @@ import numpy as np
 import pandas as pd
 import torch
 from sklearn.impute import SimpleImputer
-from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from torch import nn
 
-from models.mc_dcnn import BitNet
-from utils import split_sequence
+from models.ts_dcnn import BitNet
 
 PATH = "./runs/"
 se = SimpleImputer(strategy="mean", missing_values=np.nan)
@@ -24,9 +22,6 @@ data.set_index("load_date", inplace=True)
 # Shift the price by one timestep
 data["prior_price"] = data["usd"].shift(periods=1, fill_value=0)
 
-# Loop through dataset and format into subsequences
-STEPS = 24  # 1 day
-
 data.dropna(inplace=True)
 y = data["usd"]
 X = data.drop(["crypto", "id", "AVG(s2.score)", "row_num", "usd"], axis=1)
@@ -36,16 +31,8 @@ X = data.drop(["crypto", "id", "AVG(s2.score)", "row_num", "usd"], axis=1)
 X = se.fit_transform(X)
 X = ss.fit_transform(X)
 
-y = y.to_numpy()
-X, y = split_sequence(X, y, STEPS)
-
-X = X.permute(0, 2, 1)
-
-# test = X[0].reshape(1, 1, -1)
-# Split into train/test
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.2, random_state=420
-)
+X = torch.from_numpy(X).float()
+# y = torch.tensor(y).float()
 
 
 def init_weights(mod):
@@ -56,20 +43,14 @@ def init_weights(mod):
 
 
 # Build model. Pass in the number of channels to build the proper Conv layers.
-model = BitNet(X.shape[1])  # .apply(init_weights)
+model = BitNet()
 model.apply(init_weights)
-optimizer = torch.optim.Adam(model.parameters(), lr=0.005, weight_decay=1e-5)
+optimizer = torch.optim.Adam(model.parameters(), lr=0.05, weight_decay=1e-5)
 criterion = nn.MSELoss()
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-X.to(device)
-y.to(device)
-model.to(device)
-
-preds = []
 # Train model with model.train()
 model.train()
-for epoch in range(40):
+for epoch in range(150):
     RUNNING_LOSS = 0.0
     for i, value in enumerate(X):
         inputs = value.unsqueeze(0)
@@ -80,17 +61,12 @@ for epoch in range(40):
         optimizer.zero_grad()
         loss.backward()  # this is backpropagation to calculate gradients
         optimizer.step()  # applying gradient descent to update weights and bias values
-    preds.append(prediction.detach().numpy())
 
     print(
         "epoch: ", epoch, " loss: ", np.sqrt(RUNNING_LOSS / len(X))
     )  # print out loss for each epoch
 
 torch.save(model.state_dict(), PATH + "base.pt")
-
-# plt.scatter(X[:, 1, 1], preds, color='red')
-# plt.scatter(X[:, 1, 1], y.detach().numpy())
-# plt.show()
 
 # Test model
 with torch.no_grad():
