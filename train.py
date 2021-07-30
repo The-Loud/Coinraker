@@ -58,7 +58,7 @@ def init_weights(mod):
 # Build model. Pass in the number of channels to build the proper Conv layers.
 model = BitNet(X.shape[1])  # .apply(init_weights)
 model.apply(init_weights)
-optimizer = torch.optim.Adam(model.parameters(), lr=0.005, weight_decay=1e-5)
+optimizer = torch.optim.Adam(model.parameters(), lr=0.001)  # , weight_decay=1e-5)
 criterion = nn.MSELoss()
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -69,7 +69,7 @@ model.to(device)
 preds = []
 # Train model with model.train()
 model.train()
-for epoch in range(40):
+for epoch in range(15):
     RUNNING_LOSS = 0.0
     for i, value in enumerate(X):
         inputs = value.unsqueeze(0)
@@ -86,10 +86,10 @@ for epoch in range(40):
         "epoch: ", epoch, " loss: ", np.sqrt(RUNNING_LOSS / len(X))
     )  # print out loss for each epoch
 
-torch.save(model.state_dict(), PATH + "base.pt")
+torch.save(model.state_dict(), PATH + "base_729.pt")
 
-# plt.scatter(X[:, 1, 1], preds, color='red')
-# plt.scatter(X[:, 1, 1], y.detach().numpy())
+# plt.plot(X[:, 1, 1], preds, color='red')
+# plt.plot(X[:, 1, 1], y.detach().numpy())
 # plt.show()
 
 # Test model

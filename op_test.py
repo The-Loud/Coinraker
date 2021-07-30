@@ -38,11 +38,12 @@ inp = torch.from_numpy(inp).float()
 inp = inp.unsqueeze(0).permute(0, 2, 1)
 
 model = BitNet(inp.shape[1])
-model.load_state_dict(torch.load("./runs/base.pt"))
+model.load_state_dict(torch.load("./runs/base_729.pt"))
 
 # We don't need to track gradients for predictions.
 model.eval()
 # print(summary(model))
 output = model(inp)
 
-print(f"Prediction: {output}\nActual: {data.loc[23, 'usd']}")
+print(f"Prediction: {output.item()}\nActual: {data.loc[23, 'usd']}")
+print(f"Diff: {data.loc[23, 'usd'] - output.item()}")
