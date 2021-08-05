@@ -21,11 +21,3 @@ repos:
     rev: v2.20.0
     hooks:
     -   id: pyupgrade
--   repo: local
-    hooks:
-        - id: pylint
-          name: pylint
-          entry: pylint
-          language: system
-          types: [python]
-          args: [--generated-members="torch.*"]

@@ -47,19 +47,23 @@ class PredictPrice(BaseOperator):
         engine = hook.get_sqlalchemy_engine()
 
         # Query the table for the prediction data
-        with open(self.script, encoding="utf-8") as file:
+        with open("sqls/prediction_data.sql", encoding="utf-8") as file:
             query = file.read()
 
         data = pd.read_sql(query, engine)
+        data.drop_duplicates(subset="load_date")
         # TODO: Use a window function on this query
-
-        # Create methods to handle the missing data points.
-        # steps = 24  # 1 day
-        inp = data.drop(["load_date"], axis=1)
 
         # Create methods to handle the missing data points.
         imputer = SimpleImputer(strategy="mean", missing_values=np.nan)
         scaler = StandardScaler()
+
+        # steps = 24  # 1 day
+        inp = data.set_index("load_date")
+
+        # Shift the price by one timestep
+        inp["prior_price"] = inp["usd"].shift(periods=1, fill_value=0)
+        inp.drop("usd", inplace=True, axis=1)
 
         inp = imputer.fit_transform(inp)
         inp = scaler.fit_transform(inp)
@@ -68,16 +72,23 @@ class PredictPrice(BaseOperator):
         inp = inp.unsqueeze(0).permute(0, 2, 1)
 
         model = BitNet(inp.shape[1])
-        model.load_state_dict(torch.load("./runs/base_3.pt"))
+        model.load_state_dict(torch.load("./runs/base_731.pt"))
 
         # We don't need to track gradients for predictions.
         model.eval()
-
+        # print(summary(model))
         output = model(inp)
 
-        print(f"Prediction: {output.item()}\nActual: {data.loc[23, 'usd']}")
+        final = data.loc[23].copy()
+        final["prediction"] = output.item()
+        final["diff"] = final["prediction"] - final["usd"]
 
-        data.to_sql(self.table_name, engine, if_exists="append", index=False)
+        final = final.to_frame().T.reset_index().drop("index", axis=1)
+        print(final)
 
-        message = f"Prediction: {output.item()}\nActual: {data.loc[23, 'usd']}"
+        # Concatenate the prediction and the data and put it in a new table.
+        data.to_sql(self.table_name, engine, if_exists="append")
+
+        # message = f"Prediction: {output.item()}\nActual: {data.loc[23, 'usd']}"
+        message = output.item() / data.loc[23, "usd"]
         return message

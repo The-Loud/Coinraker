@@ -15,15 +15,11 @@ def linear_layer(inp: int, outp: int) -> nn.Sequential:
     :return: nn.Sequential completed block
     """
     return nn.Sequential(
-        nn.Linear(inp, 1000),
+        nn.Linear(inp, 50),
         nn.ReLU(inplace=True),
-        nn.Linear(1000, 750),
+        nn.Linear(50, 25),
         nn.ReLU(inplace=True),
-        nn.Linear(750, 250),
-        nn.ReLU(inplace=True),
-        nn.Linear(250, 50),
-        nn.ReLU(inplace=True),
-        nn.Linear(50, outp),
+        nn.Linear(25, 1),
     )
 
 
@@ -37,7 +33,7 @@ class BitNet(nn.Module):
         super().__init__()
 
         # Need to figure out how to get this value from the output of the CNNs
-        self.lin1 = linear_layer(5, 1)
+        self.lin1 = linear_layer(75, 1)
 
     def forward(self, x_data):
         """

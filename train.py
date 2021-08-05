@@ -1,16 +1,18 @@
 """
 The training function for the network. handles data preprocessing and model training.
 """
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import torch
 from sklearn.impute import SimpleImputer
-from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error
 from sklearn.preprocessing import StandardScaler
 from torch import nn
 
-from models.mc_dcnn import BitNet
+from models.mc_dcnn_v2 import BitNet
 from utils import split_sequence
+
 
 PATH = "./runs/"
 se = SimpleImputer(strategy="mean", missing_values=np.nan)
@@ -23,6 +25,9 @@ data = data.drop_duplicates(subset="load_date")
 data.set_index("load_date", inplace=True)
 # Shift the price by one timestep
 data["prior_price"] = data["usd"].shift(periods=1, fill_value=0)
+
+# Drop the first row which has a prior price of 0
+data = data.iloc[1:, :]
 
 # Loop through dataset and format into subsequences
 STEPS = 24  # 1 day
@@ -41,12 +46,6 @@ X, y = split_sequence(X, y, STEPS)
 
 X = X.permute(0, 2, 1)
 
-# test = X[0].reshape(1, 1, -1)
-# Split into train/test
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.2, random_state=420
-)
-
 
 def init_weights(mod):
     """Initialize weights using xavier"""
@@ -55,10 +54,16 @@ def init_weights(mod):
         mod.bias.data.fill_(0.01)
 
 
+X_train = X[:518]
+y_train = y[:518]
+
+X_test = X[518:]
+y_test = y[518:]
+
 # Build model. Pass in the number of channels to build the proper Conv layers.
-model = BitNet(X.shape[1])  # .apply(init_weights)
+model = BitNet(series=X.shape[1])
 model.apply(init_weights)
-optimizer = torch.optim.Adam(model.parameters(), lr=0.001)  # , weight_decay=1e-5)
+optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-5)
 criterion = nn.MSELoss()
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -67,31 +72,59 @@ y.to(device)
 model.to(device)
 
 preds = []
-# Train model with model.train()
+trloss = []
+vloss = []
+
 model.train()
-for epoch in range(15):
-    RUNNING_LOSS = 0.0
-    for i, value in enumerate(X):
+for epoch in range(30):
+    y_true_train = list()
+    y_pred_train = list()
+    TOTAL_LOSS_TRAIN = 0
+
+    for i, value in enumerate(X_train):
         inputs = value.unsqueeze(0)
-        labels = y[i]
+        labels = y_train[i]
         prediction = model(inputs)
         loss = criterion(prediction.squeeze(), labels)
-        RUNNING_LOSS += loss.item() * inputs.size(0)
+        y_true_train += list(labels.unsqueeze(0))
+        y_pred_train += list(prediction.cpu().data.numpy())
+
+        # RUNNING_LOSS += loss.item() * inputs.size(0)
+        TOTAL_LOSS_TRAIN += loss.item()
         optimizer.zero_grad()
         loss.backward()  # this is backpropagation to calculate gradients
         optimizer.step()  # applying gradient descent to update weights and bias values
-    preds.append(prediction.detach().numpy())
 
-    print(
-        "epoch: ", epoch, " loss: ", np.sqrt(RUNNING_LOSS / len(X))
-    )  # print out loss for each epoch
+        train_acc = mean_squared_error(y_true_train, y_pred_train, squared=False)
+        train_loss = TOTAL_LOSS_TRAIN / len(X_train)
+    trloss.append(train_acc)
 
-torch.save(model.state_dict(), PATH + "base_729.pt")
+    # Test model
+    with torch.no_grad():
+        y_true_val = list()
+        y_pred_val = list()
+        TOTAL_LOSS_VAL = 0
 
-# plt.plot(X[:, 1, 1], preds, color='red')
-# plt.plot(X[:, 1, 1], y.detach().numpy())
-# plt.show()
+        for i, value in enumerate(X_test):
+            inputs = value.unsqueeze(0)
+            labels = y_test[i]
+            prediction = model(inputs)
+            loss = criterion(prediction.squeeze(), labels)
 
-# Test model
-with torch.no_grad():
-    pass
+            y_true_val += list(labels.unsqueeze(0))
+            y_pred_val += list(prediction.cpu().data.numpy())
+            TOTAL_LOSS_VAL += loss.item()
+        valacc = mean_squared_error(y_true_val, y_pred_val, squared=False)
+        vloss.append(valacc)
+        valloss = TOTAL_LOSS_VAL / len(X_test)
+        print(
+            f"Epoch {epoch}: train_loss: {train_loss:.4f} train_rmse: {train_acc:.4f} | val_loss: {valloss:.4f} val_rmse: {valacc:.4f}"
+        )
+
+
+torch.save(model.state_dict(), PATH + "mc2_804.pt")
+plt.plot(trloss)
+plt.plot(vloss)
+plt.legend(["training", "test"], loc="lower right")
+plt.ylim(0, 5000)
+plt.show()

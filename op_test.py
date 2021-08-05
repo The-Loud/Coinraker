@@ -8,7 +8,9 @@ from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import StandardScaler
 from sqlalchemy import create_engine
 
-from models.mc_dcnn import BitNet
+from models.sc_dcnn import BitNet
+
+# from models.mc_dcnn_v2 import BitNet
 
 engine = create_engine(os.getenv("src_conn_id"))
 
@@ -37,13 +39,14 @@ inp = scaler.fit_transform(inp)
 inp = torch.from_numpy(inp).float()
 inp = inp.unsqueeze(0).permute(0, 2, 1)
 
-model = BitNet(inp.shape[1])
-model.load_state_dict(torch.load("./runs/base_729.pt"))
+# model = BitNet(inp.shape[1])
+model = BitNet()
+model.load_state_dict(torch.load("./runs/sc_804.pt"))
 
 # We don't need to track gradients for predictions.
 model.eval()
-# print(summary(model))
 output = model(inp)
+
 
 print(f"Prediction: {output.item()}\nActual: {data.loc[23, 'usd']}")
 print(f"Diff: {data.loc[23, 'usd'] - output.item()}")

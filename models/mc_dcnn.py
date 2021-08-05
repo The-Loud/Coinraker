@@ -69,7 +69,6 @@ class SigNet(nn.Module):
         """
         x_1 = self.pool(self.block1(x_inp))
 
-        # x_2 = self.pool(self.block2(x_1))  # 1 x 8 x 24
         # No need for second pool
         x_2 = self.block2(x_1)  # 1 x 8 x 12
         # print(x_2.shape)
