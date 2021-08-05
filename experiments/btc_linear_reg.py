@@ -12,9 +12,9 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
 # Load up the data
-data = pd.read_csv("../data/Bitcoin_dataset_updated 2.csv")
-X = data.drop(["BTC price", "Date"], axis=1)
-y = np.log(data["BTC price"])
+data = pd.read_csv("./data/training.csv")
+X = data.drop(["usd", "load_date", "crypto"], axis=1)
+y = np.log(data["usd"])
 
 # Split the data
 X_train, X_test, y_train, y_test = train_test_split(

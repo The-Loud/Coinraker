@@ -33,7 +33,7 @@ class BitNet(nn.Module):
         super().__init__()
 
         # Need to figure out how to get this value from the output of the CNNs
-        self.lin1 = linear_layer(75, 1)
+        self.lin1 = nn.Linear(5, 1)
 
     def forward(self, x_data):
         """
@@ -44,4 +44,4 @@ class BitNet(nn.Module):
         :return: vector ready for linear layer
         """
         out = self.lin1(x_data)
-        return out.flatten()
+        return out
