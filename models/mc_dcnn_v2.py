@@ -108,7 +108,7 @@ class BitNet(nn.Module):
         Each channel should be sent through its own CNN
         [Batch, channel, subsequence]
         :param x_data: input tensor
-        :return: vector ready for linear layer
+        :return: prediction
         """
 
         tensor_list = []
