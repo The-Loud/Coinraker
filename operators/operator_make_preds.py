@@ -43,8 +43,9 @@ class PredictPrice(BaseOperator):
         """
 
         # Build the connection
-        hook = MySqlHook(schema="source", mysql_conn_id=self.mysql_conn_id)
-        engine = hook.get_sqlalchemy_engine()
+        # hook = MySqlHook(schema="source", mysql_conn_id=self.mysql_conn_id)
+        # engine = hook.get_sqlalchemy_engine()
+        engine = self.mysql_conn_id
 
         # Query the table for the prediction data
         with open("sqls/prediction_data.sql", encoding="utf-8") as file:
@@ -52,7 +53,8 @@ class PredictPrice(BaseOperator):
 
         data = pd.read_sql(query, engine)
         data.drop_duplicates(subset="load_date")
-        # TODO: Use a window function on this query
+        data["prior_price"] = data["usd"].shift(periods=1, fill_value=0)
+        data["usd"] = data["usd"].diff(periods=1)
 
         # Create methods to handle the missing data points.
         imputer = SimpleImputer(strategy="mean", missing_values=np.nan)
@@ -62,7 +64,6 @@ class PredictPrice(BaseOperator):
         inp = data.set_index("load_date")
 
         # Shift the price by one timestep
-        inp["prior_price"] = inp["usd"].shift(periods=1, fill_value=0)
         inp.drop("usd", inplace=True, axis=1)
 
         inp = imputer.fit_transform(inp)
@@ -72,15 +73,14 @@ class PredictPrice(BaseOperator):
         inp = inp.unsqueeze(0).permute(0, 2, 1)
 
         model = BitNet(inp.shape[1])
-        model.load_state_dict(torch.load("./runs/base_731.pt"))
+        model.load_state_dict(torch.load("./runs/mc2_808.pt"))
 
         # We don't need to track gradients for predictions.
         model.eval()
-        # print(summary(model))
         output = model(inp)
 
         final = data.loc[23].copy()
-        final["prediction"] = output.item()
+        final["prediction"] = final["prior_price"] + output.item()
         final["diff"] = final["prediction"] - final["usd"]
 
         final = final.to_frame().T.reset_index().drop("index", axis=1)

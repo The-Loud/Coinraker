@@ -8,25 +8,9 @@ and pass it through some hidden layers for a final regression.
 from torch import nn
 
 
-def linear_layer(inp: int, outp: int) -> nn.Sequential:
-    """
-    Linear layer definition that uses two hidden layers
-    :param inp: Size of the starting input layer. This is derived from the third dimension.
-    :return: nn.Sequential completed block
-    """
-    return nn.Sequential(
-        nn.Linear(inp, 50),
-        nn.ReLU(inplace=True),
-        nn.Linear(50, 25),
-        nn.ReLU(inplace=True),
-        nn.Linear(25, 1),
-    )
-
-
 class BitNet(nn.Module):
     """
-    The main network.
-    One convNet layer and one linear layer.
+    Linear regression model with PyTorch
     """
 
     def __init__(self):
@@ -36,12 +20,6 @@ class BitNet(nn.Module):
         self.lin1 = nn.Linear(5, 1)
 
     def forward(self, x_data):
-        """
-        Each tensor will have a couple of channels.
-        Each channel should be sent through its own CNN
-        [Batch, channel, subsequence]
-        :param x_data: input tensor
-        :return: vector ready for linear layer
-        """
+        """passes the data through a single learnable layer."""
         out = self.lin1(x_data)
         return out

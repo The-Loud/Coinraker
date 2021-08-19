@@ -32,7 +32,7 @@ X = se.fit_transform(X)
 X = ss.fit_transform(X)
 
 X = torch.from_numpy(X).float()
-# y = torch.tensor(y).float()
+y = torch.tensor(y).float()
 
 
 def init_weights(mod):

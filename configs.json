@@ -1,0 +1,20 @@
+{
+    "01": {
+        "hyperparams": {
+            "epochs": 10,
+            "lr": 0.001,
+            "weight_decay": 1e-5
+        },
+        "model": {
+            "conv1": {
+                "inp": 1,
+                "oup": 8,
+                "k_size": 3
+            },
+            "linear": {
+                "h_size": 2208,
+                "out_size": 1
+            }
+        }
+    }
+}

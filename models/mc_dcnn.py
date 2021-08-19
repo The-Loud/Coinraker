@@ -27,7 +27,7 @@ def conv_1d(
     """
     return nn.Sequential(
         nn.Conv1d(
-            inp, oup, kernel_size=k_size, stride=stride, padding=padding, bias=True
+            inp, oup, kernel_size=k_size, stride=stride, padding=padding, bias=False
         ),
         nn.BatchNorm1d(oup),
         nn.ReLU(inplace=True),
@@ -58,8 +58,8 @@ class SigNet(nn.Module):
         super().__init__()
 
         self.block1 = conv_1d(inp=1, oup=8, k_size=(3,), stride=(1,), padding=(1,))
-        self.pool = nn.MaxPool1d(kernel_size=2, ceil_mode=False)  # 1 x 8 x 12
-        self.block2 = conv_1d(8, 16, (5,), (1,), (1,))  # 1 x 16 x 7
+        self.pool = nn.MaxPool1d(kernel_size=2, ceil_mode=False)
+        self.block2 = conv_1d(8, 16, (5,), (1,), (1,))
 
     def forward(self, x_inp):
         """
@@ -70,7 +70,7 @@ class SigNet(nn.Module):
         x_1 = self.pool(self.block1(x_inp))
 
         # No need for second pool
-        x_2 = self.block2(x_1)  # 1 x 8 x 12
+        x_2 = self.block2(x_1)
         # print(x_2.shape)
 
         # Reshape tensors for the concat

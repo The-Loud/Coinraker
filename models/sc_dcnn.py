@@ -69,7 +69,7 @@ class SigNet(nn.Module):
         :param x_inp: tensor
         :return: prediction
         """
-        x_1 = self.block1(x_inp)
+        x_1 = self.pool(self.block1(x_inp))
         # x_1 = self.block1(x_inp)
 
         # No need for second pool
@@ -110,7 +110,7 @@ class BitNet(nn.Module):
         # Create a SigNet for each channel
         self.conv = SigNet()
 
-        h_layer = 250
+        h_layer = 4080
 
         # Need to figure out how to get this value from the output of the CNNs
         self.lin1 = linear_layer(h_layer, 1)

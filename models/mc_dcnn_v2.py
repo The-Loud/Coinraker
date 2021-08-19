@@ -26,8 +26,9 @@ def conv_1d(
     :return: complete conv block
     """
     return nn.Sequential(
+        # No bias term because batchnorm contains a bias term.
         nn.Conv1d(
-            inp, oup, kernel_size=k_size, stride=stride, padding=padding, bias=True
+            inp, oup, kernel_size=k_size, stride=stride, padding=padding, bias=False
         ),
         nn.BatchNorm1d(oup),
         nn.ReLU(inplace=True),
@@ -58,7 +59,10 @@ class SigNet(nn.Module):
     def __init__(self):
         super().__init__()
 
-        self.block1 = conv_1d(inp=1, oup=2, k_size=(2,), stride=(1,), padding=(1,))
+        self.block1 = conv_1d(inp=1, oup=8, k_size=(5,), stride=(1,), padding=(1,))
+        self.pool = nn.MaxPool1d(2)
+        self.block2 = conv_1d(8, 16, 5, 1, 1)
+        # self.block3 = conv_1d(64, 128, 3, 1, 1)
 
     def forward(self, x_inp):
         """
@@ -67,11 +71,9 @@ class SigNet(nn.Module):
         :return: prediction
         """
         x_1 = self.block1(x_inp)
-
-        # Reshape tensors for the concat
-        x_1 = x_1.reshape(1, 1, -1)
-
-        return x_1
+        x_1 = self.pool(x_1)
+        x_2 = self.pool(self.block2(x_1))
+        return x_2
 
 
 class BitNet(nn.Module):
@@ -92,12 +94,12 @@ class BitNet(nn.Module):
         super().__init__()
 
         # Create a SigNet for each channel
-        self.series = series  # number of time-series channels (features)
+        self.series = series
         self.convs = nn.ModuleList()
         for _ in range(self.series):
             self.convs.append(SigNet())
 
-        h_layer = 250
+        h_layer = 320
 
         # Need to figure out how to get this value from the output of the CNNs
         self.lin1 = linear_layer(h_layer, 1)
@@ -116,9 +118,16 @@ class BitNet(nn.Module):
             output = self.convs[i](x_data[:, i, :].unsqueeze(dim=1))
             tensor_list.append(output)
 
-        out = torch.cat(tensor_list, dim=2)
+        out = torch.cat(tensor_list, dim=1)
+
+        outputs = []
+        for i in range(out.shape[0]):
+            output = self.lin1(out[i, :, :].unsqueeze(0).reshape(1, 1, -1))
+            outputs.append(output)
+
+        out = torch.cat(outputs, dim=0)
 
         # Linear stuff
-        out = self.lin1(out)
+        # out = self.lin1(out)
 
         return out.flatten()
