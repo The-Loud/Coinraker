@@ -16,14 +16,17 @@ def conv_1d(
     stride: tuple[int, ...],
     padding: tuple[int, ...],
 ) -> nn.Sequential:
-    """
-    Creates a standard convolutional block with batchnorm and activation.
-    :param inp: input channels. Typically 1 for time series
-    :param oup: number of output channels
-    :param k_size: kernel size. 1 x k
-    :param stride: self-explanatory
-    :param padding: self-explanatory
-    :return: complete conv block
+    """Creates a 1-dimensional convolution block with batch norm and ReLU.
+
+    Args:
+        inp (int): [description]
+        oup (int): [description]
+        k_size (tuple[int, ...]): [description]
+        stride (tuple[int, ...]): [description]
+        padding (tuple[int, ...]): [description]
+
+    Returns:
+        nn.Sequential: [description]
     """
     return nn.Sequential(
         # No bias term because batchnorm contains a bias term.
@@ -36,11 +39,14 @@ def conv_1d(
 
 
 def linear_layer(inp: int, oup: int) -> nn.Sequential:
-    """
-    Linear layer definition that uses two hidden layers
-    :param inp: Size of the starting input layer. This is derived from the third dimension
-                of the conv output tensor.
-    :return: nn.Sequential completed block
+    """Creates a standard linear layer.
+
+    Args:
+        inp (int): [description]
+        oup (int): [description]
+
+    Returns:
+        nn.Sequential: [description]
     """
     return nn.Sequential(nn.Linear(inp, oup))
 
@@ -77,17 +83,19 @@ class SigNet(nn.Module):
 
 
 class BitNet(nn.Module):
-    """
-    The main network.
-    A dynamic number of ConvNet layers is initialized depending on the number
-    of channels (time-series or features).
-    After each is set up, the model will pass each time-series through its own
-    separate CNN. The idea is to have the network view the time-series independently
-    and assess their separate impact on the dependent variable. A single multi-channel
-    CNN would aggregate all the time-series data together in the first pass, assessing
-    all the data at once.
-    The data from each CNN is then concatenated to a 1D tensor and passed through a
-    linear block.
+    """The main network.
+        A dynamic number of ConvNet layers is initialized depending on the number
+        of channels (time-series or features).
+        After each is set up, the model will pass each time-series through its own
+        separate CNN. The idea is to have the network view the time-series independently
+        and assess their separate impact on the dependent variable. A single multi-channel
+        CNN would aggregate all the time-series data together in the first pass, assessing
+        all the data at once.
+        The data from each CNN is then concatenated to a 1D tensor and passed through a
+        linear block.
+
+    Args:
+        nn ([type]): [description]
     """
 
     def __init__(self, series: int = 1):

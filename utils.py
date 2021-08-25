@@ -4,18 +4,20 @@ The sliding window can be defined and the returned X will be a tensor
 of (subsequence slices x channels x subsequence length)
 """
 import numpy as np
-import pandas as pd
 import torch
 from torch.utils.data import Dataset
 
 
 def split_sequence(x_seq: np.array, y_seq: np.array, n_steps: int) -> torch.tensor:
-    """
-    Splits up a time series numpy array into tensors of subsequences.
-    :param x_seq: feature sequence
-    :param y_seq: target sequence
-    :param n_steps: the number of time steps in each subsequence
-    :return: two tensors
+    """[summary]
+
+    Args:
+        x_seq (np.array): [description]
+        y_seq (np.array): [description]
+        n_steps (int): [description]
+
+    Returns:
+        torch.tensor: [description]
     """
     x_train, y_train = list(), list()
     for i in range(len(x_seq)):
