@@ -1,9 +1,10 @@
-SELECT usd,
-       usd_24h_change,
-       usd_24h_vol,
-       usd_market_cap,
-       load_date,
-       avg_rating
-FROM   source.base_data
-WHERE  load_date between date_format(now(), '%%Y-%%m-%%d %%H:00:00') - interval 24 hour
-   and date_format(now(), '%%Y-%%m-%%d %%H:00:00');
+SELECT *
+FROM   (SELECT usd,
+               usd_24h_change,
+               usd_24h_vol,
+               usd_market_cap,
+               load_date,
+               avg_rating
+        FROM   source.base_data
+        ORDER BY load_date desc limit 24) sub
+ORDER BY load_date asc;

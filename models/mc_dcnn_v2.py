@@ -3,7 +3,7 @@ The multi-channel DCNN will take in each time series as a separate channel.
 These channels will be convolved separately with independent filters.
 Once completed, the model will concatenate all the feature maps to a linear layer
 and pass it through some hidden layers for a final regression.
-# Kind of like this paper: http://staff.ustc.edu.cn/~cheneh/paper_pdf/2014/Yi-Zheng-WAIM2014.pdf
+Inspired by this paper: http://staff.ustc.edu.cn/~cheneh/paper_pdf/2014/Yi-Zheng-WAIM2014.pdf
 """
 import torch
 from torch import nn
@@ -68,7 +68,6 @@ class SigNet(nn.Module):
         self.block1 = conv_1d(inp=1, oup=8, k_size=(5,), stride=(1,), padding=(1,))
         self.pool = nn.MaxPool1d(2)
         self.block2 = conv_1d(8, 16, 5, 1, 1)
-        # self.block3 = conv_1d(64, 128, 3, 1, 1)
 
     def forward(self, x_inp):
         """

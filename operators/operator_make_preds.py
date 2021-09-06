@@ -6,11 +6,12 @@ import numpy as np
 import pandas as pd
 import torch
 from airflow.models.baseoperator import BaseOperator
-from airflow.providers.mysql.hooks.mysql import MySqlHook
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import StandardScaler
 
-from models.mc_dcnn import BitNet
+from models.mc_dcnn_v2 import BitNet
+
+# from airflow.providers.mysql.hooks.mysql import MySqlHook
 
 
 class PredictPrice(BaseOperator):
@@ -43,18 +44,17 @@ class PredictPrice(BaseOperator):
         """
 
         # Build the connection
+        engine = self.mysql_conn_id
         # hook = MySqlHook(schema="source", mysql_conn_id=self.mysql_conn_id)
         # engine = hook.get_sqlalchemy_engine()
-        engine = self.mysql_conn_id
 
         # Query the table for the prediction data
         with open("sqls/prediction_data.sql", encoding="utf-8") as file:
             query = file.read()
 
         data = pd.read_sql(query, engine)
-        data.drop_duplicates(subset="load_date")
-        data["prior_price"] = data["usd"].shift(periods=1, fill_value=0)
-        data["usd"] = data["usd"].diff(periods=1)
+        # data.drop_duplicates(subset="load_date")
+        data["prior_price"] = data["usd"]  # .shift(periods=1, fill_value=0)
 
         # Create methods to handle the missing data points.
         imputer = SimpleImputer(strategy="mean", missing_values=np.nan)
@@ -83,11 +83,11 @@ class PredictPrice(BaseOperator):
         final["prediction"] = final["prior_price"] + output.item()
         final["diff"] = final["prediction"] - final["usd"]
 
-        final = final.to_frame().T.reset_index().drop("index", axis=1)
+        final = final.to_frame().T  # .reset_index().drop("index", axis=1)
         print(final)
 
         # Concatenate the prediction and the data and put it in a new table.
-        data.to_sql(self.table_name, engine, if_exists="append")
+        data.to_sql(self.table_name, engine, if_exists="append", index=False)
 
         # message = f"Prediction: {output.item()}\nActual: {data.loc[23, 'usd']}"
         message = output.item() / data.loc[23, "usd"]

@@ -4,7 +4,6 @@ import numpy as np
 import pandas as pd
 import torch
 from matplotlib import pyplot as plt
-from pandas.tseries.offsets import Hour
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import StandardScaler
 from sqlalchemy import create_engine
