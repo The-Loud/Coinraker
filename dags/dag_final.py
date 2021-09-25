@@ -9,9 +9,9 @@ from datetime import timedelta
 from airflow import DAG
 from airflow.operators.dummy import DummyOperator
 from airflow.providers.mysql.operators.mysql import MySqlOperator
-
 from operators.operator_coin_api import ApiToMySql
 from operators.operator_make_preds import PredictPrice
+from operators.operator_one_step import Extrapolate
 from operators.operator_tweet_dump import TweetToMySql
 from operators.operator_tweet_sentiment import TweetSentiment
 
@@ -41,11 +41,11 @@ default_args = {
 }
 
 with DAG(
-    "dag_coin_full_send",
+    "dag_coin_predictions",
     default_args=default_args,
     description="Pulls various crypto prices every interval",
     schedule_interval="@hourly",
-    start_date=(datetime(2021, 5, 29)),
+    start_date=(datetime(2021, 8, 1)),
     catchup=False,
     tags=["crypto"],
     template_searchpath="/opt/airflow/include/sqls",
@@ -83,14 +83,8 @@ with DAG(
         name="sentiment_task",
         mysql_conn_id="mysql_pinwheel_source",
         table_name="sentiment",
-        script="pull_tweets.sql",
+        script="/opt/airflow/include/sqls/pull_tweets.sql",
     )
-
-    """t6 = mysql_task = MySqlOperator(
-        task_id="remove_duplicate_tweets",
-        mysql_conn_id="mysql_pinwheel_source",
-        sql="../sqls/remove_dupes.sql",
-    )"""
 
     t7 = MySqlOperator(
         task_id="load_base",
@@ -103,10 +97,16 @@ with DAG(
         name="prediction_task",
         mysql_conn_id="mysql_pinwheel_source",
         table_name="predictions",
-        script="prediction_data.sql",
+        script="/opt/airflow/include/sqls/prediction_data.sql",
     )
 
-    t9 = DummyOperator(task_id="extract_data")
+    t9 = Extrapolate(
+        task_id="extrapolator",
+        name="one_step_ahead",
+        mysql_conn_id="mysql_pinwheel_source",
+        table_name="source.extrapolate",
+        script="/opt/airflow/include/sqls/prediction_data.sql",
+    )
 
     t1 >> [t2, t3, t4]
     t4 >> t5

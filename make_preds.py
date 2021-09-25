@@ -22,9 +22,7 @@ def pull_data():
 
 
 def preprocess(data):
-    data.drop_duplicates(subset="load_date")
-    data["prior_price"] = data["usd"].shift(periods=1, fill_value=0)
-    # data['usd'] = data['usd'].diff(periods=1)
+    data["prior_price"] = data["usd"]
 
     # Create methods to handle the missing data points.
     imputer = SimpleImputer(strategy="mean", missing_values=np.nan)
@@ -64,12 +62,18 @@ def build_output(data, output):
     final["prediction"] = final["prior_price"] + output.item()
     final["diff"] = final["prediction"] - final["usd"]
     final["usd"] = final["prediction"]
+    final["usd_24h_change"] = data["usd_24h_change"].mean()
+    final["usd_24h_vol"] = data["usd_24h_vol"].mean()
+    final["usd_market_cap"] = data["usd_market_cap"].mean()
+    final["avg_rating"] = data["avg_rating"].mean()
     final["load_date"] = final.load_date + pd.Timedelta(hours=1)
-    # final.drop("prior_price", inplace=True)
 
-    final = final.to_frame().T.reset_index().drop("index", axis=1)
-    # out = pd.concat([data, final])
+    final = final.to_frame().T
     return final
+
+
+def save_to_table(frame):
+    frame.to_sql("source.extrapolate", engine, index=False, if_exists="replace")
 
 
 def main():
@@ -79,13 +83,14 @@ def main():
     df = build_output(data, preds)
     out = pd.concat([data, df])
 
-    for _ in range(24):
+    for _ in range(1):
         inp = out.tail(24)
         p_inp = preprocess(inp)
         preds = predict(p_inp)
         df = build_output(out, preds)
         out = pd.concat([out, df])
     out = out.reset_index()
+    save_to_table(out)
 
     plt.plot(out["load_date"], out["prediction"])
     plt.show()

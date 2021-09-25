@@ -7,9 +7,10 @@ from datetime import datetime
 from typing import List
 
 import pandas as pd
+from pycoingecko import CoinGeckoAPI
+
 from airflow.models.baseoperator import BaseOperator
 from airflow.providers.mysql.hooks.mysql import MySqlHook
-from pycoingecko import CoinGeckoAPI
 
 
 class ApiToMySql(BaseOperator):

@@ -9,6 +9,7 @@ from datetime import datetime
 import pandas as pd
 import preprocessor as p
 import tweepy
+
 from airflow.models import Variable
 from airflow.models.baseoperator import BaseOperator
 from airflow.providers.mysql.hooks.mysql import MySqlHook

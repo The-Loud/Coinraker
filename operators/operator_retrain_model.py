@@ -4,12 +4,12 @@ The training function for the network. handles data preprocessing and model trai
 import numpy as np
 import pandas as pd
 import torch
-from airflow.models.baseoperator import BaseOperator
-from airflow.providers.mysql.hooks.mysql import MySqlHook
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import StandardScaler
 from torch import nn
 
+from airflow.models.baseoperator import BaseOperator
+from airflow.providers.mysql.hooks.mysql import MySqlHook
 from models.mc_dcnn import BitNet
 from utils import split_sequence
 

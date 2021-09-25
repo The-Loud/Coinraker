@@ -3,9 +3,10 @@ Operator for loading tweet sentiment.
 Uses NLP to calculate the sentiment then saves it to a table.
 """
 import pandas as pd
+from transformers import pipeline
+
 from airflow.models.baseoperator import BaseOperator
 from airflow.providers.mysql.hooks.mysql import MySqlHook
-from transformers import pipeline
 
 
 class TweetSentiment(BaseOperator):

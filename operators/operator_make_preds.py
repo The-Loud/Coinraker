@@ -5,10 +5,10 @@ Uses NLP to calculate the sentiment then saves it to a table.
 import numpy as np
 import pandas as pd
 import torch
-from airflow.models.baseoperator import BaseOperator
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import StandardScaler
 
+from airflow.models.baseoperator import BaseOperator
 from models.mc_dcnn_v2 import BitNet
 
 # from airflow.providers.mysql.hooks.mysql import MySqlHook
